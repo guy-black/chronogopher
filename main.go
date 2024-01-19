@@ -53,8 +53,11 @@ func (m model) View() string {
 	if hour>12 {
 		hour -= 12
 	}
-	t := stringTime(hour, min, sec)
-	return fmt.Sprintf("%s\n%s\n%s", timeTopLine(t), timeMidLine(t), timeBotLine(t))
+	time := stringTime(hour, min, sec)
+	return fmt.Sprintf("%s\n%s\n%s",
+		timeTopLine(time),
+		timeMidLine(time),
+		timeBotLine(time),)
 }
 
 func timeTopLine (time string) string {
