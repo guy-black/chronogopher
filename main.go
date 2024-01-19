@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -48,7 +49,77 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return m.dt.String()
+	hour, min, sec := m.dt.Clock()
+	if hour>12 {
+		hour -= 12
+	}
+	t := stringTime(hour, min, sec)
+	return fmt.Sprintf("%s\n%s\n%s", timeTopLine(t), timeMidLine(t), timeBotLine(t))
+}
+
+func timeTopLine (time string) string {
+	time = strings.ReplaceAll(time, "1", OneTop)
+	time = strings.ReplaceAll(time, "2", TwoTop)
+	time = strings.ReplaceAll(time, "3", ThrTop)
+	time = strings.ReplaceAll(time, "4", FouTop)
+	time = strings.ReplaceAll(time, "5", FivTop)
+	time = strings.ReplaceAll(time, "6", SixTop)
+	time = strings.ReplaceAll(time, "7", SevTop)
+	time = strings.ReplaceAll(time, "8", EigTop)
+	time = strings.ReplaceAll(time, "9", NinTop)
+	time = strings.ReplaceAll(time, "0", ZerTop)
+	time = strings.ReplaceAll(time, ":", ColTop)
+	return time
+}
+
+func timeMidLine (time string) string {
+	time = strings.ReplaceAll(time, "1", OneMid)
+	time = strings.ReplaceAll(time, "2", TwoMid)
+	time = strings.ReplaceAll(time, "3", ThrMid)
+	time = strings.ReplaceAll(time, "4", FouMid)
+	time = strings.ReplaceAll(time, "5", FivMid)
+	time = strings.ReplaceAll(time, "6", SixMid)
+	time = strings.ReplaceAll(time, "7", SevMid)
+	time = strings.ReplaceAll(time, "8", EigMid)
+	time = strings.ReplaceAll(time, "9", NinMid)
+	time = strings.ReplaceAll(time, "0", ZerMid)
+	time = strings.ReplaceAll(time, ":", ColMid)
+	return time
+}
+
+func timeBotLine (time string) string {
+	time = strings.ReplaceAll(time, "1", OneBot)
+	time = strings.ReplaceAll(time, "2", TwoBot)
+	time = strings.ReplaceAll(time, "3", ThrBot)
+	time = strings.ReplaceAll(time, "4", FouBot)
+	time = strings.ReplaceAll(time, "5", FivBot)
+	time = strings.ReplaceAll(time, "6", SixBot)
+	time = strings.ReplaceAll(time, "7", SevBot)
+	time = strings.ReplaceAll(time, "8", EigBot)
+	time = strings.ReplaceAll(time, "9", NinBot)
+	time = strings.ReplaceAll(time, "0", ZerBot)
+	time = strings.ReplaceAll(time, ":", ColBot)
+	return time
+}
+
+func stringTime (hour, min, sec int) string {
+	var h,m,s string
+	if hour<10 {
+		h = fmt.Sprintf ("0%d", hour)
+	} else {
+		h = fmt.Sprint (hour)
+	}
+	if min<10 {
+		m = fmt.Sprintf ("0%d", min)
+	} else {
+		m = fmt.Sprint (min)
+	}
+	if sec<10 {
+		s = fmt.Sprintf ("0%d", sec)
+	} else {
+		s = fmt.Sprint (sec)
+	}
+	return fmt.Sprint(h,":",m,":",s)
 }
 
 func main() {
@@ -58,3 +129,41 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+// constants
+
+const (
+	OneTop = " ┃ "
+	OneMid = " ┃ "
+	OneBot = " ┃ "
+	TwoTop = "━━┓"
+	TwoMid = "┏━┛"
+	TwoBot = "┗━━"
+	ThrTop = "━━┓"
+	ThrMid = "━━┫"
+	ThrBot = "━━┛"
+	FouTop = "┃ ┃"
+	FouMid = "┗━┫"
+	FouBot = "  ┃"
+	FivTop = "┏━━"
+	FivMid = "┗━┓"
+	FivBot = "━━┛"
+	SixTop = "┏━━"
+	SixMid = "┣━┓"
+	SixBot = "┗━┛"
+	SevTop = "━━┓"
+	SevMid = "  ┃"
+	SevBot = "  ┃"
+	EigTop = "┏━┓"
+	EigMid = "┣━┫"
+	EigBot = "┗━┛"
+	NinTop = "┏━┓"
+	NinMid = "┗━┫"
+	NinBot = "━━┛"
+	ZerTop = "┏━┓"
+	ZerMid = "┃ ┃"
+	ZerBot = "┗━┛"
+	ColTop = "╻"
+	ColMid = " "
+	ColBot = "╹"
+)
