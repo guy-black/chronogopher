@@ -71,10 +71,13 @@ func (m model) View() string {
 
 // creating the date
 	year, month, day := m.dt.Date()
-	mdy := fmt.Sprintf("%s %d, %d",
+	wd := m.dt.Weekday()
+	mdy := fmt.Sprintf("%s, %s %d, %d",
+		wd.String(),
 		month.String(),
 		day,
 		year,)
+
 
 // here's the actual view to be rendered
 		return appStyle.Render(lipgloss.JoinVertical(0.5,
