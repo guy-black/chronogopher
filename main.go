@@ -7,7 +7,10 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
+
+var appStyle = lipgloss.NewStyle().Padding(1)
 
 type model struct {
 	dt time.Time
@@ -16,7 +19,7 @@ type model struct {
 type TickMsg time.Time
 
 func doTick() tea.Cmd {
-	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+	return tea.Every(time.Second, func(t time.Time) tea.Msg {
 		return TickMsg(t)
 	})
 }
@@ -29,6 +32,7 @@ func initialModel() model {
 
 func (m model) Init() tea.Cmd {
 	return tea.Sequence(
+		tea.EnterAltScreen,
 		tea.SetWindowTitle("chronogopher"),
 		doTick(),
 	)
@@ -50,14 +54,32 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	hour, min, sec := m.dt.Clock()
+// some time later I'll make this conditional on a 24/12 hour clock option
+// but I like 12 hour time so it's just like this for now
 	if hour>12 {
 		hour -= 12
 	}
+// I convert the time to a hh:mm:ss string to make it easier
+// to convert into big text with box drawing unicode chars
 	time := stringTime(hour, min, sec)
-	return fmt.Sprintf("%s\n%s\n%s",
+
+// creating the clock section
+	clock := fmt.Sprintf("%s\n%s\n%s",
 		timeTopLine(time),
 		timeMidLine(time),
-		timeBotLine(time),)
+		timeBotLine(time))
+
+// creating the date
+	year, month, day := m.dt.Date()
+	mdy := fmt.Sprintf("%s %d, %d",
+		month.String(),
+		day,
+		year,)
+
+// here's the actual view to be rendered
+		return appStyle.Render(lipgloss.JoinVertical(0.5,
+			clock,
+			mdy,))
 }
 
 func timeTopLine (time string) string {
@@ -136,33 +158,33 @@ func main() {
 // constants
 
 const (
-	OneTop = " ┃ "
+	OneTop = " ╻ "
 	OneMid = " ┃ "
-	OneBot = " ┃ "
-	TwoTop = "━━┓"
+	OneBot = " ╹ "
+	TwoTop = "╺━┓"
 	TwoMid = "┏━┛"
-	TwoBot = "┗━━"
-	ThrTop = "━━┓"
-	ThrMid = "━━┫"
-	ThrBot = "━━┛"
-	FouTop = "┃ ┃"
+	TwoBot = "┗━╸"
+	ThrTop = "╺━┓"
+	ThrMid = "╺━┫"
+	ThrBot = "╺━┛"
+	FouTop = "╻ ╻"
 	FouMid = "┗━┫"
-	FouBot = "  ┃"
-	FivTop = "┏━━"
+	FouBot = "  ╹"
+	FivTop = "┏━╸"
 	FivMid = "┗━┓"
-	FivBot = "━━┛"
-	SixTop = "┏━━"
+	FivBot = "╺━┛"
+	SixTop = "┏━╸"
 	SixMid = "┣━┓"
 	SixBot = "┗━┛"
-	SevTop = "━━┓"
+	SevTop = "╺━┓"
 	SevMid = "  ┃"
-	SevBot = "  ┃"
+	SevBot = "  ╹"
 	EigTop = "┏━┓"
 	EigMid = "┣━┫"
 	EigBot = "┗━┛"
 	NinTop = "┏━┓"
 	NinMid = "┗━┫"
-	NinBot = "━━┛"
+	NinBot = "╺━┛"
 	ZerTop = "┏━┓"
 	ZerMid = "┃ ┃"
 	ZerBot = "┗━┛"
