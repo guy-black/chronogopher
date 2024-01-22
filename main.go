@@ -10,7 +10,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var appStyle = lipgloss.NewStyle().Padding(1)
+// styles
+var (
+	// style for whole app
+	appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder())
+	// calendar
+	calStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+)
 
 type model struct {
 	dt time.Time
@@ -78,12 +84,120 @@ func (m model) View() string {
 		day,
 		year,)
 
+// creating the calendar
+	cal := calStyle.Render(lipgloss.JoinVertical(0.5,
+		// TODO: make this reference a value from m when I implement moving months
+		fmt.Sprintf("%s  %d\n", month.String(), year),
+		"Sun Mon Tue Wed Thu Fri Sat",))
+
+	calDays := genCalDays (true, month, day, wd)
 
 // here's the actual view to be rendered
 		return appStyle.Render(lipgloss.JoinVertical(0.5,
 			clock,
-			mdy,))
+			mdy,
+			cal,
+			calDays,))
 }
+
+func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
+// first figure how many last days of last month to render
+// get first day of month with this weekday as fwdm
+	fwdm := day
+	for fwdm > 7 {
+		fwdm -= 7
+	}
+	// fwdmdeb := fwdm
+// get weekday of first of the month as wdfm
+	wdfm := wd
+	// as long as fwdm > 1 decrement fwdm and go back one weekday from wdfm
+	for fwdm > 1 {
+		wdfm = backOneWeekday(wdfm)
+		fwdm -= 1
+	} // wdfm should now be the weekday for the first of the month
+	// thus wdfm is also the number of days of the last month to show
+	finStr := ""
+	daysInPrevMon := daysInMonth(leap, backOneMonth(mon))
+	daysToPrint := 42 // 6 weeks * 7 days
+	for wdfm > 0 {
+		finStr = fmt.Sprint(daysInPrevMon, "  ") + finStr
+		daysInPrevMon -= 1
+		wdfm -= 1
+		daysToPrint -= 1
+	}
+	daysThisMon := daysInMonth(leap, mon)
+	for i:=1; i<=daysThisMon; i++ {
+		dayNum := ""
+		if i<10 {
+			dayNum = fmt.Sprint(" ", i, "  ")
+		} else {
+			dayNum = fmt.Sprint(i, "  ")
+		}
+		finStr += dayNum
+		// this has to be the wrongest way to do this but I'm tired and math.Remainder
+		// takes float64 and honestly I'd rather just do this maybe I'll fix it later idk
+		if daysToPrint == 36 || daysToPrint == 29 || daysToPrint == 22 || daysToPrint == 15 || daysToPrint == 8 {
+			finStr += "\n"
+		}
+		daysToPrint -= 1
+	}
+	// okay now just adding remaining days from next month
+	dltp := daysToPrint
+	for i:=1; i<=dltp; i++ {
+		dayNum := ""
+		if i<10 {
+			dayNum = fmt.Sprint(" ", i, "  ")
+		} else {
+			dayNum = fmt.Sprint(i, "  ")
+		}
+		finStr += dayNum
+		if daysToPrint == 36 || daysToPrint == 29 || daysToPrint == 22 || daysToPrint == 15 || daysToPrint == 8 {
+			finStr += "\n"
+		}
+		daysToPrint--
+	} // 100% grug brain
+	return finStr
+}
+
+func backOneWeekday(wd time.Weekday) time.Weekday{
+	if wd == 0 {
+		return 6
+	} else {
+		return wd - 1
+	}
+}
+
+func backOneMonth(mon time.Month) time.Month{
+	if mon == 1 {
+		return 12
+	} else {
+		return mon - 1
+	}
+}
+
+func daysInMonth(leap bool, mon time.Month) int {
+	switch mon.String() {
+		case "January"  : return 31
+		case "February" :
+			 if leap {
+			 	return 29
+			 } else {
+			 	return 28
+			 }
+		case "March"    : return 31
+		case "April"    : return 30
+		case "May"      : return 31
+		case "June"     : return 30
+		case "July"     : return 31
+		case "August"   : return 31
+		case "September": return 30
+		case "October"  : return 31
+		case "November" : return 30
+		case "December" : return 31
+		default         : return 0 // shouldn't need this but here just in case
+	}
+}
+
 
 func timeTopLine (time string) string {
 	time = strings.ReplaceAll(time, "1", OneTop)
