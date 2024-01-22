@@ -120,42 +120,44 @@ func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
 	daysInPrevMon := daysInMonth(leap, backOneMonth(mon))
 	daysToPrint := 42 // 6 weeks * 7 days
 	for wdfm > 0 {
-		finStr = fmt.Sprint(daysInPrevMon, "  ") + finStr
-		daysInPrevMon -= 1
-		wdfm -= 1
-		daysToPrint -= 1
+		finStr = fmt.Sprint(daysInPrevMon, " ") + finStr
+		daysInPrevMon--
+		wdfm--
+		daysToPrint--
 	}
 	daysThisMon := daysInMonth(leap, mon)
 	for i:=1; i<=daysThisMon; i++ {
 		dayNum := ""
 		if i<10 {
-			dayNum = fmt.Sprint(" ", i, "  ")
+			dayNum = fmt.Sprint("  ", i, " ")
 		} else {
-			dayNum = fmt.Sprint(i, "  ")
+			dayNum = fmt.Sprint(" ", i, " ")
 		}
 		finStr += dayNum
+		daysToPrint--
 		// this has to be the wrongest way to do this but I'm tired and math.Remainder
 		// takes float64 and honestly I'd rather just do this maybe I'll fix it later idk
-		if daysToPrint == 36 || daysToPrint == 29 || daysToPrint == 22 || daysToPrint == 15 || daysToPrint == 8 {
+		if daysToPrint%7 == 0 {
 			finStr += "\n"
 		}
-		daysToPrint -= 1
 	}
 	// okay now just adding remaining days from next month
+	// create new var dltp equal to daysToPrint so I can still keep track of if a
+	// newline is needed by days left to print while counting up days to print
 	dltp := daysToPrint
 	for i:=1; i<=dltp; i++ {
 		dayNum := ""
 		if i<10 {
-			dayNum = fmt.Sprint(" ", i, "  ")
+			dayNum = fmt.Sprint("  ", i, " ")
 		} else {
-			dayNum = fmt.Sprint(i, "  ")
+			dayNum = fmt.Sprint(" ", i, " ")
 		}
 		finStr += dayNum
-		if daysToPrint == 36 || daysToPrint == 29 || daysToPrint == 22 || daysToPrint == 15 || daysToPrint == 8 {
+		daysToPrint--
+		if daysToPrint%7 == 0 {
 			finStr += "\n"
 		}
-		daysToPrint--
-	} // 100% grug brain
+	} // 50% grug brain
 	return finStr
 }
 
