@@ -85,19 +85,19 @@ func (m model) View() string {
 		year,)
 
 // creating the calendar
+	calDays := genCalDays (true, month, day, wd)
 	cal := calStyle.Render(lipgloss.JoinVertical(0.5,
 		// TODO: make this reference a value from m when I implement moving months
 		fmt.Sprintf("%s  %d\n", month.String(), year),
-		"Sun Mon Tue Wed Thu Fri Sat",))
+		"Sun Mon Tue Wed Thu Fri Sat",
+		calDays,))
 
-	calDays := genCalDays (true, month, day, wd)
 
 // here's the actual view to be rendered
 		return appStyle.Render(lipgloss.JoinVertical(0.5,
 			clock,
 			mdy,
-			cal,
-			calDays,))
+			cal,))
 }
 
 func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
