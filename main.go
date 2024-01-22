@@ -137,7 +137,7 @@ func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
 		daysToPrint--
 		// this has to be the wrongest way to do this but I'm tired and math.Remainder
 		// takes float64 and honestly I'd rather just do this maybe I'll fix it later idk
-		if daysToPrint%7 == 0 {
+		if daysToPrint%7 == 0 && daysToPrint != 0 {
 			finStr += "\n"
 		}
 	}
@@ -154,7 +154,7 @@ func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
 		}
 		finStr += dayNum
 		daysToPrint--
-		if daysToPrint%7 == 0 {
+		if daysToPrint%7 == 0 && daysToPrint != 0 {
 			finStr += "\n"
 		}
 	} // 50% grug brain
