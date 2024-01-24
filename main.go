@@ -15,18 +15,61 @@ var (
 	// style for whole app
 	appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.Color("2"))
 	// clock
-	clockStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("5"))
 	// calendar
-	calStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("3"))
 	calCurrDay = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
 	othMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
-	// todo list
-	todoStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
 )
 
+func clockStyle(m model) lipgloss.Style {
+	if m.sel == ClockSect {
+		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("5"))
+	}
+	return lipgloss.NewStyle().Padding(1).Foreground(lipgloss.Color("5"))
+}
+
+func calStyle(m model) lipgloss.Style {
+	if m.sel == CalSect {
+		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("3"))
+	}
+	return lipgloss.NewStyle().Padding(1).Foreground(lipgloss.Color("3"))
+}
+
+func todoStyle(m model) lipgloss.Style {
+	if m.sel == TodoSect {
+		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+	}
+	return lipgloss.NewStyle().Padding(1)
+}
+
+type Section byte
+
+const (
+	 ClockSect = iota
+	 CalSect
+	 TodoSect
+)
+
+
+func incSel (s Section) Section{
+	if s == 2 {
+		return 0
+	}
+	s++
+	return s
+}
+
+func decSel (s Section) Section{
+	if s == 0 {
+		return 2
+	}
+	s--
+	return s
+}
+
 type model struct {
-	dt time.Time
-	td []string
+	dt  time.Time
+	td  []string
+	sel Section
 }
 
 type TickMsg time.Time
@@ -44,6 +87,7 @@ func initialModel() model {
 			"finish chronogopher",
 			"work on teh",
 			},
+		sel: 2,
 	}
 }
 
@@ -61,6 +105,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 				case "q":
 					return m, tea.Quit
+				case "tab":
+					m.sel = incSel (m.sel)
+					return m, nil
+				case "shift+tab":
+					m.sel = decSel (m.sel)
+					return m, nil
 			}
 		case TickMsg:
 			m.dt = time.Now()
@@ -68,6 +118,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	return m, nil
 }
+
 
 func (m model) View() string {
 	hour, min, sec := m.dt.Clock()
@@ -80,7 +131,7 @@ func (m model) View() string {
 // to convert into big text with box drawing unicode chars
 	time := stringTime(hour, min, sec)
 // creating the clock section
-	clock := clockStyle.Render(fmt.Sprintf("%s\n%s\n%s",
+	clock := clockStyle(m).Render(fmt.Sprintf("%s\n%s\n%s",
 		timeTopLine(time),
 		timeMidLine(time),
 		timeBotLine(time)))
@@ -94,22 +145,26 @@ func (m model) View() string {
 		year,)
 // creating the calendar
 	calDays := genCalDays (true, month, day, wd)
-	cal := calStyle.Render(lipgloss.JoinVertical(0.5,
+	cal := calStyle(m).Render(lipgloss.JoinVertical(0.5,
 		// TODO: make this reference a value from m when I implement moving months
 		fmt.Sprintf("%s  %d\n", month.String(), year),
 		"Sun Mon Tue Wed Thu Fri Sat",
 		calDays,))
 // creating the todo
-	todo := "todo"
+	tdl := ""
 	for _, t := range m.td {
-		todo += fmt.Sprint("\n", t)
+		tdl += fmt.Sprint(t, "\n")
 	}
+	fntdl, _ := strings.CutSuffix(tdl, "\n")
+	todo := todoStyle(m).Render(lipgloss.JoinVertical(.5,
+		"todo",
+		fntdl))
 // here's the actual view to be rendered
 		return appStyle.Render(lipgloss.JoinVertical(0.5,
 			clock,
 			mdy,
 			cal,
-			todo,))
+			todo))
 }
 
 func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
