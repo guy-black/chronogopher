@@ -42,7 +42,7 @@ func todoStyle(m model) lipgloss.Style {
 }
 
 
-
+// custom types
 type ClockType byte
 
 const (
@@ -92,9 +92,26 @@ func decSel (s Section) Section{
 	return s
 }
 
+// where to look for the todolist
+// can be written as an absolute path
+// or relative to where it's being launched from
+const TODO_LIST string = "../.cgtodo"
+
+type Todo struct {
+	tasks  []Task
+	sel    byte // if my list get's longer than 256 items then I'll change this
+}
+
+type Task struct {
+	task     string
+	// subtasks []Task
+	// alarm Time.time
+	// TODO allow for infinitely recursive subtasks and alarm
+}
+
 type model struct {
 	dt     time.Time
-	todo   []string
+	todo   Todo
 	sel    Section
 	clkTyp ClockType
 }
@@ -108,12 +125,23 @@ func doTick() tea.Cmd {
 }
 
 func initialModel() model {
+	dat, err := os.ReadFile(TODO_LIST)
+	var initTasks []Task
+	if err!=nil {
+		initTasks = make([]Task, 0)
+	} else {
+		initTasks = make([]Task, 0)
+		for _,t:=range strings.Split(string(dat), "\n") {
+			nt := Task{task: t}
+			initTasks = append(initTasks, nt)
+		}
+	}
 	return model {
 		dt: time.Now(),
-		todo: []string {
-			"finish chronogopher",
-			"work on teh",
-			},
+		todo: Todo {
+			tasks: initTasks,
+			sel: 0,
+		},
 		sel: 2,
 		clkTyp: 0,
 	}
@@ -188,10 +216,10 @@ func (m model) View() string {
 		calDays,))
 // creating the todo
 	tdl := ""
-	for _, t := range m.todo {
-		tdl += fmt.Sprint(t, "\n")
+	for _, t := range m.todo.tasks {
+		tdl += fmt.Sprint(t.task, "\n")
 	}
-	fntdl, _ := strings.CutSuffix(tdl, "\n")
+	fntdl := strings.TrimSpace(tdl)
 	todo := todoStyle(m).Render(lipgloss.JoinVertical(.5,
 		"todo",
 		fntdl))
