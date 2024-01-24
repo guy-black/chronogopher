@@ -13,13 +13,20 @@ import (
 // styles
 var (
 	// style for whole app
-	appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder())
+	appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.Color("2"))
+	// clock
+	clockStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("5"))
 	// calendar
-	calStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+	calStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("3"))
+	calCurrDay = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
+	othMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+	// todo list
+	todoStyle = lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
 )
 
 type model struct {
 	dt time.Time
+	td []string
 }
 
 type TickMsg time.Time
@@ -33,6 +40,10 @@ func doTick() tea.Cmd {
 func initialModel() model {
 	return model {
 		dt: time.Now(),
+		td: []string {
+			"finish chronogopher",
+			"work on teh",
+			},
 	}
 }
 
@@ -68,13 +79,11 @@ func (m model) View() string {
 // I convert the time to a hh:mm:ss string to make it easier
 // to convert into big text with box drawing unicode chars
 	time := stringTime(hour, min, sec)
-
 // creating the clock section
-	clock := fmt.Sprintf("%s\n%s\n%s",
+	clock := clockStyle.Render(fmt.Sprintf("%s\n%s\n%s",
 		timeTopLine(time),
 		timeMidLine(time),
-		timeBotLine(time))
-
+		timeBotLine(time)))
 // creating the date
 	year, month, day := m.dt.Date()
 	wd := m.dt.Weekday()
@@ -83,7 +92,6 @@ func (m model) View() string {
 		month.String(),
 		day,
 		year,)
-
 // creating the calendar
 	calDays := genCalDays (true, month, day, wd)
 	cal := calStyle.Render(lipgloss.JoinVertical(0.5,
@@ -91,13 +99,17 @@ func (m model) View() string {
 		fmt.Sprintf("%s  %d\n", month.String(), year),
 		"Sun Mon Tue Wed Thu Fri Sat",
 		calDays,))
-
-
+// creating the todo
+	todo := "todo"
+	for _, t := range m.td {
+		todo += fmt.Sprint("\n", t)
+	}
 // here's the actual view to be rendered
 		return appStyle.Render(lipgloss.JoinVertical(0.5,
 			clock,
 			mdy,
-			cal,))
+			cal,
+			todo,))
 }
 
 func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
@@ -128,15 +140,21 @@ func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
 	daysThisMon := daysInMonth(leap, mon)
 	for i:=1; i<=daysThisMon; i++ {
 		dayNum := ""
-		if i<10 {
-			dayNum = fmt.Sprint("  ", i, " ")
+		if i==day{
+			if i<10 {
+				dayNum = fmt.Sprint("  ", i, " ")
+			} else {
+				dayNum = fmt.Sprint(" ", i, " ")
+			}
 		} else {
-			dayNum = fmt.Sprint(" ", i, " ")
+			if i<10 {
+				dayNum = fmt.Sprint("  ", i, " ")
+			} else {
+				dayNum = fmt.Sprint(" ", i, " ")
+			}
 		}
 		finStr += dayNum
 		daysToPrint--
-		// this has to be the wrongest way to do this but I'm tired and math.Remainder
-		// takes float64 and honestly I'd rather just do this maybe I'll fix it later idk
 		if daysToPrint%7 == 0 && daysToPrint != 0 {
 			finStr += "\n"
 		}
