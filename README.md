@@ -17,7 +17,6 @@ roadmap to 1.0
 - read todo list from external file and save to it on close
   -- save it on every update, expensive but guaratees you'll always have an updated todo list
   -- could also poll it on every tick to keep it in sync if you have multiple instances open
-- when clock selected change clock from 12 hour to 24 hour clock or maybe others too in the future
 - when calendar selected move day cursor up, down, left, and right around calendar
  -- able to add, remove, or view todo tasts on certain days
  -- also just see the calendar for that month

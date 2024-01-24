@@ -41,14 +41,40 @@ func todoStyle(m model) lipgloss.Style {
 	return lipgloss.NewStyle().Padding(1)
 }
 
+
+
+type ClockType byte
+
+const (
+	H12 ClockType = iota
+	H24
+)
+// keep this variable in sync with number of clock types available
+// should always be numberOfClock - 1
+const HIGHEST_CLOCK ClockType = 1
+
+func incClk (c ClockType) ClockType {
+	if c == HIGHEST_CLOCK {
+		return 0
+	}
+	c++
+	return c
+}
+func decClk (c ClockType) ClockType {
+	if c == 0 {
+		return HIGHEST_CLOCK
+	}
+	c--
+	return c
+}
+
 type Section byte
 
 const (
-	 ClockSect = iota
+	 ClockSect Section = iota
 	 CalSect
 	 TodoSect
 )
-
 
 func incSel (s Section) Section{
 	if s == 2 {
@@ -67,9 +93,10 @@ func decSel (s Section) Section{
 }
 
 type model struct {
-	dt  time.Time
-	td  []string
-	sel Section
+	dt     time.Time
+	todo   []string
+	sel    Section
+	clkTyp ClockType
 }
 
 type TickMsg time.Time
@@ -83,11 +110,12 @@ func doTick() tea.Cmd {
 func initialModel() model {
 	return model {
 		dt: time.Now(),
-		td: []string {
+		todo: []string {
 			"finish chronogopher",
 			"work on teh",
 			},
 		sel: 2,
+		clkTyp: 0,
 	}
 }
 
@@ -111,6 +139,26 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case "shift+tab":
 					m.sel = decSel (m.sel)
 					return m, nil
+				case "left":
+					switch m.sel {
+						case ClockSect:
+							m.clkTyp = decClk(m.clkTyp)
+							return m, nil
+						case CalSect:
+							return m, nil
+						case TodoSect:
+							return m, nil
+					}
+				case "right":
+					switch m.sel {
+						case ClockSect:
+							m.clkTyp = incClk(m.clkTyp)
+							return m, nil
+						case CalSect:
+							return m, nil
+						case TodoSect:
+							return m, nil
+					}
 			}
 		case TickMsg:
 			m.dt = time.Now()
@@ -121,20 +169,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 
 func (m model) View() string {
-	hour, min, sec := m.dt.Clock()
-// some time later I'll make this conditional on a 24/12 hour clock option
-// but I like 12 hour time so it's just like this for now
-	if hour>12 {
-		hour -= 12
-	}
-// I convert the time to a hh:mm:ss string to make it easier
-// to convert into big text with box drawing unicode chars
-	time := stringTime(hour, min, sec)
 // creating the clock section
-	clock := clockStyle(m).Render(fmt.Sprintf("%s\n%s\n%s",
-		timeTopLine(time),
-		timeMidLine(time),
-		timeBotLine(time)))
+	clock := clockStyle(m).Render(genClock(m))
 // creating the date
 	year, month, day := m.dt.Date()
 	wd := m.dt.Weekday()
@@ -152,7 +188,7 @@ func (m model) View() string {
 		calDays,))
 // creating the todo
 	tdl := ""
-	for _, t := range m.td {
+	for _, t := range m.todo {
 		tdl += fmt.Sprint(t, "\n")
 	}
 	fntdl, _ := strings.CutSuffix(tdl, "\n")
@@ -165,6 +201,30 @@ func (m model) View() string {
 			mdy,
 			cal,
 			todo))
+}
+
+func genClock (m model) string{
+	hour, min, sec := m.dt.Clock()
+	switch m.clkTyp {
+		case H12:
+			ampm := "am"
+			if hour>12 {
+				hour -= 12
+				ampm = "pm"
+			}
+			time := stringTime(hour, min, sec)
+			return fmt.Sprintf("%s\n%s\n%s",
+				timeTopLine(time),
+				timeMidLine(time)+ampm,
+				timeBotLine(time))
+		case H24:
+			time := stringTime(hour, min, sec)
+			return fmt.Sprintf("%s\n%s\n%s",
+				timeTopLine(time),
+				timeMidLine(time),
+				timeBotLine(time))
+	}
+	return ""
 }
 
 func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
