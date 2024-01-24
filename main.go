@@ -212,6 +212,9 @@ func genClock (m model) string{
 				hour -= 12
 				ampm = "pm"
 			}
+			if hour == 12 {
+				ampm = "pm"
+			}
 			time := stringTime(hour, min, sec)
 			return fmt.Sprintf("%s\n%s\n%s",
 				timeTopLine(time),
