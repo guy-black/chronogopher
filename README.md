@@ -6,15 +6,15 @@ but still have a while a lot of work to do before I can feel complete and happy 
 
 roadmap to 1.0
 
-- figure out how to style the numbers on the calndar differently.
+- figure out how to style the numbers on the calendar differently.
 ` -- maybe I'm just missing something but I can't get them to work right
   -- want to keep the days of the current month but not today the same
   -- and make days of previous/next month a different color, and current day a diffferent color
   -- add a * after any day with todo list items attached to it
-- neatly organize all the color values and anything else worth customizing into their owns costs in one section together
+- neatly organize all the color values and anything else worth customizing into their owns consts in one section together
   -- go compiles fast enough that I can just treat it as an interpreted language and config by editing source for now
   -- later on would like to actually read in and parse a config file just for completions sake
-- read todo list from config file and save to it on close
+- read todo list from external file and save to it on close
   -- save it on every update, expensive but guaratees you'll always have an updated todo list
   -- could also poll it on every tick to keep it in sync if you have multiple instances open
 - select between clock, calendar, and todo list sections
