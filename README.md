@@ -24,6 +24,7 @@ roadmap to 1.0
  -- also just see the calendar for that month
  -- repeat same todo over regular period (daily, weekly, monthly, etc)
 - when todo list selected able to add/edit/remove todolist items
+ -- scroll up and down todo list if list items exceed given lengths
  -- also add sub items to todo list items
  -- show a general/longterm todo list and a day specific todo list
  -- add optional time and alarm to todo list items, when the time comes either
