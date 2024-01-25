@@ -215,7 +215,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case TickMsg:
 			if !slices.Equal(m.todo.tasks, fetchTasks()){
 				m.todo.tasks = fetchTasks()
-				if int(m.todo.sel) > len(m.todo.tasks){
+				if int(m.todo.sel) >= len(m.todo.tasks)-1{
 					m.todo.sel--
 				}
 			}
@@ -272,7 +272,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								m.todo.sel = 0
 								return m, nil
 							} else {
-								m.todo.sel--
+								m.todo.sel++
 								return m, nil
 							}
 						case "enter":
@@ -292,6 +292,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						case "esc":
 							m.todoInput.Reset()
 							m.todoInput.Blur()
+							return m, nil
+						case "delete":
+							selint := int(m.todo.sel)
+							m.todo.tasks = slices.Delete(m.todo.tasks, selint, selint+1)
+							writeTasks(m.todo.tasks)
+							if selint >= len(m.todo.tasks)-1 {
+								m.todo.sel--
+							}
 							return m, nil
 					}
 			}

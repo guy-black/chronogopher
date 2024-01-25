@@ -18,7 +18,7 @@ roadmap to 1.0
  -- able to add, remove, or view todo tasts on certain days
  -- also just see the calendar for that month
  -- repeat same todo over regular period (daily, weekly, monthly, etc)
-- when todo list selected able to edit/remove todolist items
+- when todo list selected able to edit todolist items
  -- scroll up and down todo list if list items exceed given lengths
  -- also add sub items to todo list items
  -- show a general/longterm todo list and a day specific todo list
