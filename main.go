@@ -245,6 +245,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					switch m.sel{
 						case TodoSect:
 							if int(m.todo.sel) == 0 {
+							// TODO: figure out why I need to subtract two instead of one here and below
 								m.todo.sel = byte(len(m.todo.tasks)-2)
 								return m, nil
 							} else {
@@ -280,6 +281,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								return m, foc
 							}
 					}
+				case "esc":
+					if m.sel == TodoSect {
+						m.todoInput.Reset()
+						m.todoInput.Blur()
+					}
+					return m, nil
 			}
 		case TickMsg:
 			if !slices.Equal(m.todo.tasks, fetchTasks()){
