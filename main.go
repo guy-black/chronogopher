@@ -7,8 +7,8 @@ import (
 	"strings"
 	"slices"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/textinput"
 )
 
@@ -36,9 +36,9 @@ func calStyle(m model) lipgloss.Style {
 
 func todoStyle(m model) lipgloss.Style {
 	if m.sel == TodoSect {
-		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Height(17)
 	}
-	return lipgloss.NewStyle().Padding(1)
+	return lipgloss.NewStyle().Padding(1).Height(17)
 }
 
 func todoItemStyle(m model, i byte) lipgloss.Style {
@@ -113,17 +113,19 @@ type Todo struct {
 
 type Task struct {
 	task     string
-	// subtasks [] string
 	// alarm Time.time
+	// date Time.time.Date()
 }
 
 // model
 type model struct {
-	dt        time.Time
-	todo      Todo
-	sel       Section
-	clkTyp    ClockType
-	todoInput textinput.Model
+	dt         time.Time
+	todo       Todo
+	sel        Section
+	clkTyp     ClockType
+	todoInput  textinput.Model
+	vpStart    int
+	vpEnd      int
 }
 
 func initialModel() model {
@@ -142,6 +144,9 @@ func initialModel() model {
 		sel: 2,
 		clkTyp: 0,
 		todoInput: ti,
+		vpStart: 0,
+		vpEnd: 14,
+		// TODO: pull this out to a const instead of hard code
 	}
 }
 
@@ -167,8 +172,9 @@ func styledTaskString (m model) string {
 	ts := m.todo.tasks
 	tdl := ""
 	for i, t := range ts {
-		if t.task != ""{
+		if t.task != "" && i>=m.vpStart && i <= m.vpEnd{
 			if byte(i)==m.todo.sel {
+				// TODO: pull this prefix out into a const
 				tdl += fmt.Sprint("⊢", t.task, "\n")
 			} else {
 				tdl += fmt.Sprint(" ", t.task, "\n")
@@ -261,18 +267,33 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							if int(m.todo.sel) == 0 {
 							// TODO: figure out why I need to subtract two instead of one here and below
 								m.todo.sel = byte(len(m.todo.tasks)-2)
+								if m.todo.sel > byte(m.vpEnd) {
+									se := int(m.todo.sel) - m.vpEnd
+									m.vpStart += se
+									m.vpEnd += se
+								}
 								return m, nil
 							} else {
 								m.todo.sel--
+								if m.todo.sel < byte (m.vpStart) {
+									m.vpStart--
+									m.vpEnd--
+								}
 								return m, nil
 							}
 						case "down":
 							if m.todo.sel == byte(len(m.todo.tasks)-2) {
 							// TODO: figure out why I need to subtract two instead of one here and below
 								m.todo.sel = 0
+								m.vpStart = 0
+								m.vpEnd = 14 // basically resetting the viewport
 								return m, nil
 							} else {
 								m.todo.sel++
+								if int(m.todo.sel) > m.vpEnd {
+									m.vpStart++
+									m.vpEnd++
+								}
 								return m, nil
 							}
 						case "enter":
@@ -304,7 +325,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 			}
 	}
-	// required for textInput
+	// handle bubbles
 	var cmd tea.Cmd
 	m.todoInput, cmd = m.todoInput.Update(msg)
 	return m, cmd
