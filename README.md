@@ -14,14 +14,11 @@ roadmap to 1.0
 - neatly organize all the color values and anything else worth customizing into their owns consts in one section together
   -- go compiles fast enough that I can just treat it as an interpreted language and config by editing source for now
   -- later on would like to actually read in and parse a config file just for completions sake
-- read todo list from external file and save to it on close
-  -- save it on every update, expensive but guaratees you'll always have an updated todo list
-  -- could also poll it on every tick to keep it in sync if you have multiple instances open
 - when calendar selected move day cursor up, down, left, and right around calendar
  -- able to add, remove, or view todo tasts on certain days
  -- also just see the calendar for that month
  -- repeat same todo over regular period (daily, weekly, monthly, etc)
-- when todo list selected able to add/edit/remove todolist items
+- when todo list selected able to edit/remove todolist items
  -- scroll up and down todo list if list items exceed given lengths
  -- also add sub items to todo list items
  -- show a general/longterm todo list and a day specific todo list

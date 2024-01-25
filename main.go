@@ -41,6 +41,13 @@ func todoStyle(m model) lipgloss.Style {
 	return lipgloss.NewStyle().Padding(1)
 }
 
+func todoItemStyle(m model, i byte) lipgloss.Style {
+	if i == m.todo.sel {
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
+	}
+	return lipgloss.NewStyle()
+}
+
 // CUSTOM TYPES //
 // clockType types
 type ClockType byte
@@ -156,6 +163,21 @@ func taskString (ts []Task) string {
 	return tdl
 }
 
+func styledTaskString (m model) string {
+	ts := m.todo.tasks
+	tdl := ""
+	for i, t := range ts {
+		if t.task != ""{
+			if byte(i)==m.todo.sel {
+				tdl += fmt.Sprint("⊢", t.task, "\n")
+			} else {
+				tdl += fmt.Sprint(" ", t.task, "\n")
+			}
+		}
+	}
+	return tdl
+}
+
 func fetchTasks () []Task {
 	dat, err := os.ReadFile(TODO_LIST)
 	var initTasks []Task
@@ -219,6 +241,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						case TodoSect:
 							return m, nil
 					}
+				case "up":
+					switch m.sel{
+						case TodoSect:
+							if int(m.todo.sel) == 0 {
+								m.todo.sel = byte(len(m.todo.tasks)-2)
+								return m, nil
+							} else {
+								m.todo.sel--
+								return m, nil
+							}
+					}
+				case "down":
+					switch m.sel{
+						case TodoSect:
+							if int(m.todo.sel) == len(m.todo.tasks)-2 {
+								m.todo.sel = 0
+								return m, nil
+							} else {
+								m.todo.sel++
+								return m, nil
+							}
+					}
 				case "enter":
 					switch m.sel{
 						case TodoSect:
@@ -272,11 +316,12 @@ func (m model) View() string {
 		"Sun Mon Tue Wed Thu Fri Sat",
 		calDays,))
 // creating the todo
-	tdl := taskString(m.todo.tasks)
-	fntdl := strings.TrimSpace(tdl)
+	tdl := styledTaskString(m)
+	tdl = strings.TrimSpace(tdl)
+	tdl = lipgloss.JoinVertical(.5, tdl)
 	todo := todoStyle(m).Render(lipgloss.JoinVertical(.5,
 		"todo",
-		fntdl,
+		tdl,
 		m.todoInput.View()))
 // here's the actual view to be rendered
 		return appStyle.Render(lipgloss.JoinVertical(0.5,
