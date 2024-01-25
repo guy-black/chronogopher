@@ -5,17 +5,17 @@ import (
 	"os"
 	"time"
 	"strings"
+	"slices"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/bubbles/textinput"
 )
 
 // styles
 var (
 	// style for whole app
 	appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.Color("2"))
-	// clock
-	// calendar
 	calCurrDay = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
 	othMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
 )
@@ -41,8 +41,8 @@ func todoStyle(m model) lipgloss.Style {
 	return lipgloss.NewStyle().Padding(1)
 }
 
-
-// custom types
+// CUSTOM TYPES //
+// clockType types
 type ClockType byte
 
 const (
@@ -68,6 +68,7 @@ func decClk (c ClockType) ClockType {
 	return c
 }
 
+// section type
 type Section byte
 
 const (
@@ -92,10 +93,11 @@ func decSel (s Section) Section{
 	return s
 }
 
+// Todo list types
+const TODO_LIST string = "../.cgtodo"
 // where to look for the todolist
 // can be written as an absolute path
 // or relative to where it's being launched from
-const TODO_LIST string = "../.cgtodo"
 
 type Todo struct {
 	tasks  []Task
@@ -104,27 +106,57 @@ type Todo struct {
 
 type Task struct {
 	task     string
-	// subtasks []Task
+	// subtasks [] string
 	// alarm Time.time
-	// TODO allow for infinitely recursive subtasks and alarm
 }
 
+// model
 type model struct {
-	dt     time.Time
-	todo   Todo
-	sel    Section
-	clkTyp ClockType
-}
-
-type TickMsg time.Time
-
-func doTick() tea.Cmd {
-	return tea.Every(time.Second, func(t time.Time) tea.Msg {
-		return TickMsg(t)
-	})
+	dt        time.Time
+	todo      Todo
+	sel       Section
+	clkTyp    ClockType
+	todoInput textinput.Model
 }
 
 func initialModel() model {
+	initTasks := fetchTasks()
+	ti := textinput.New()
+	ti.Blur()
+	ti.Placeholder = "      what to do...      "
+	ti.Width = 25
+
+	return model {
+		dt: time.Now(),
+		todo: Todo {
+			tasks: initTasks,
+			sel: 0,
+		},
+		sel: 2,
+		clkTyp: 0,
+		todoInput: ti,
+	}
+}
+
+func writeTasks (ts []Task) {
+	os.Remove(TODO_LIST)
+	fptr, _ := os.Create(TODO_LIST)
+	fptr.WriteString(taskString(ts))
+	fptr.Close()
+	// TODO: actually check for and handle these errors
+}
+
+func taskString (ts []Task) string {
+	tdl := ""
+	for _, t := range ts {
+		if t.task != "" {
+			tdl += fmt.Sprint(t.task, "\n")
+		}
+	}
+	return tdl
+}
+
+func fetchTasks () []Task {
 	dat, err := os.ReadFile(TODO_LIST)
 	var initTasks []Task
 	if err!=nil {
@@ -136,15 +168,15 @@ func initialModel() model {
 			initTasks = append(initTasks, nt)
 		}
 	}
-	return model {
-		dt: time.Now(),
-		todo: Todo {
-			tasks: initTasks,
-			sel: 0,
-		},
-		sel: 2,
-		clkTyp: 0,
-	}
+	return initTasks
+}
+
+type TickMsg time.Time
+
+func doTick() tea.Cmd {
+	return tea.Every(time.Second, func(t time.Time) tea.Msg {
+		return TickMsg(t)
+	})
 }
 
 func (m model) Init() tea.Cmd {
@@ -159,7 +191,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch msg.String() {
-				case "q":
+				case "ctrl+q":
 					return m, tea.Quit
 				case "tab":
 					m.sel = incSel (m.sel)
@@ -187,12 +219,37 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						case TodoSect:
 							return m, nil
 					}
+				case "enter":
+					switch m.sel{
+						case TodoSect:
+							if m.todoInput.Focused() {
+								// if enter is pressed while it's focused
+								// update model and file todolist
+								nt := m.todoInput.Value()
+								m.todoInput.Reset()
+								m.todo.tasks = append (m.todo.tasks, Task{task: nt})
+								writeTasks(m.todo.tasks)
+								// unfocus textinput
+								m.todoInput.Blur()
+							} else { // focus it
+								foc := m.todoInput.Focus()
+								return m, foc
+							}
+					}
 			}
 		case TickMsg:
+			if !slices.Equal(m.todo.tasks, fetchTasks()){
+				m.todo.tasks = fetchTasks()
+				if int(m.todo.sel) > len(m.todo.tasks){
+					m.todo.sel--
+				}
+			}
 			m.dt = time.Now()
 			return m, doTick()
 	}
-	return m, nil
+	var cmd tea.Cmd
+	m.todoInput, cmd = m.todoInput.Update(msg)
+	return m, cmd
 }
 
 
@@ -215,14 +272,12 @@ func (m model) View() string {
 		"Sun Mon Tue Wed Thu Fri Sat",
 		calDays,))
 // creating the todo
-	tdl := ""
-	for _, t := range m.todo.tasks {
-		tdl += fmt.Sprint(t.task, "\n")
-	}
+	tdl := taskString(m.todo.tasks)
 	fntdl := strings.TrimSpace(tdl)
 	todo := todoStyle(m).Render(lipgloss.JoinVertical(.5,
 		"todo",
-		fntdl))
+		fntdl,
+		m.todoInput.View()))
 // here's the actual view to be rendered
 		return appStyle.Render(lipgloss.JoinVertical(0.5,
 			clock,
