@@ -210,40 +210,54 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
+	switch msg := msg.(type){
+		// todo on every second
+		case TickMsg:
+			if !slices.Equal(m.todo.tasks, fetchTasks()){
+				m.todo.tasks = fetchTasks()
+				if int(m.todo.sel) > len(m.todo.tasks){
+					m.todo.sel--
+				}
+			}
+			m.dt = time.Now()
+			return m, doTick()
 		case tea.KeyMsg:
+			// reacting to keypresses
 			switch msg.String() {
+				// global key press actions!!!
 				case "ctrl+q":
-					return m, tea.Quit
+					return  m, tea.Quit
 				case "tab":
 					m.sel = incSel (m.sel)
 					return m, nil
 				case "shift+tab":
 					m.sel = decSel (m.sel)
 					return m, nil
-				case "left":
-					switch m.sel {
-						case ClockSect:
+			}
+			// section specific keypresses
+			switch m.sel {
+				case ClockSect:
+					switch msg.String(){
+
+// clock specific keypresses
+
+						case "left":
 							m.clkTyp = decClk(m.clkTyp)
-							return m, nil
-						case CalSect:
-							return m, nil
-						case TodoSect:
-							return m, nil
-					}
-				case "right":
-					switch m.sel {
-						case ClockSect:
+						case "right" :
 							m.clkTyp = incClk(m.clkTyp)
-							return m, nil
-						case CalSect:
-							return m, nil
-						case TodoSect:
-							return m, nil
 					}
-				case "up":
-					switch m.sel{
-						case TodoSect:
+				case CalSect:
+					switch msg.String(){
+
+// cal specific keypresses
+
+					}
+				case TodoSect:
+					switch msg.String(){
+
+// todo specific keypresses
+
+						case "up":
 							if int(m.todo.sel) == 0 {
 							// TODO: figure out why I need to subtract two instead of one here and below
 								m.todo.sel = byte(len(m.todo.tasks)-2)
@@ -252,21 +266,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								m.todo.sel--
 								return m, nil
 							}
-					}
-				case "down":
-					switch m.sel{
-						case TodoSect:
-							if int(m.todo.sel) == len(m.todo.tasks)-2 {
+						case "down":
+							if m.todo.sel == byte(len(m.todo.tasks)-2) {
+							// TODO: figure out why I need to subtract two instead of one here and below
 								m.todo.sel = 0
 								return m, nil
 							} else {
-								m.todo.sel++
+								m.todo.sel--
 								return m, nil
 							}
-					}
-				case "enter":
-					switch m.sel{
-						case TodoSect:
+						case "enter":
 							if m.todoInput.Focused() {
 								// if enter is pressed while it's focused
 								// update model and file todolist
@@ -280,24 +289,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								foc := m.todoInput.Focus()
 								return m, foc
 							}
+						case "esc":
+							m.todoInput.Reset()
+							m.todoInput.Blur()
+							return m, nil
 					}
-				case "esc":
-					if m.sel == TodoSect {
-						m.todoInput.Reset()
-						m.todoInput.Blur()
-					}
-					return m, nil
 			}
-		case TickMsg:
-			if !slices.Equal(m.todo.tasks, fetchTasks()){
-				m.todo.tasks = fetchTasks()
-				if int(m.todo.sel) > len(m.todo.tasks){
-					m.todo.sel--
-				}
-			}
-			m.dt = time.Now()
-			return m, doTick()
 	}
+	// required for textInput
 	var cmd tea.Cmd
 	m.todoInput, cmd = m.todoInput.Update(msg)
 	return m, cmd
