@@ -302,7 +302,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								// update model and file todolist
 								nt := m.todoInput.Value()
 								m.todoInput.Reset()
-								m.todo.tasks = append (m.todo.tasks, Task{task: nt})
+								m.todo.tasks = slices.Insert (m.todo.tasks, int(m.todo.sel)+1 ,Task{task: nt})
 								writeTasks(m.todo.tasks)
 								// unfocus textinput
 								m.todoInput.Blur()
