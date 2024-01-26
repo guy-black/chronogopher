@@ -302,13 +302,33 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								// update model and file todolist
 								nt := m.todoInput.Value()
 								m.todoInput.Reset()
-								m.todo.tasks = slices.Insert (m.todo.tasks, int(m.todo.sel)+1 ,Task{task: nt})
+								m.todo.tasks = slices.Insert (m.todo.tasks,
+									int(m.todo.sel)+1 ,
+									Task{task: nt})
 								writeTasks(m.todo.tasks)
 								// unfocus textinput
 								m.todoInput.Blur()
 							} else { // focus it
 								foc := m.todoInput.Focus()
 								return m, foc
+							}
+						case "alt+enter":
+							if m.todoInput.Focused() {
+								// check that it's not blank
+								nt := m.todoInput.Value()
+								m.todoInput.Reset()
+								if nt!="" {
+									rem:=slices.Delete(m.todo.tasks, int(m.todo.sel), int(m.todo.sel)+1)
+									ins:=slices.Insert(rem, int(m.todo.sel), Task{task: nt})
+									m.todo.tasks = ins
+									writeTasks(m.todo.tasks)
+								}
+								m.todoInput.Blur()
+							} else {
+								foc := m.todoInput.Focus()
+								txt := m.todo.tasks[int(m.todo.sel)].task
+								m.todoInput.SetValue(txt)
+								return m,foc
 							}
 						case "esc":
 							m.todoInput.Reset()
