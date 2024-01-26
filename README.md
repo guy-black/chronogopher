@@ -25,7 +25,7 @@ but still have a while a lot of work to do before I can feel complete and happy 
   - if text field is not active, make it active with the text of the selected todo item prefilled in
 
 
-roadmap to 1.0
+# roadmap to 1.0
 
 - figure out how to style the numbers on the calendar differently.
 ` -- maybe I'm just missing something but I can't get them to work right
