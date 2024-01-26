@@ -12,53 +12,9 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 )
 
-// styles
-var (
-	// style for whole app
-	appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.Color("2"))
-	calCurrDay = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
-	othMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
-)
-
-func clockStyle(m model) lipgloss.Style {
-	if m.sel == ClockSect {
-		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("5"))
-	}
-	return lipgloss.NewStyle().Padding(1).Foreground(lipgloss.Color("5"))
-}
-
-func calStyle(m model) lipgloss.Style {
-	if m.sel == CalSect {
-		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("3"))
-	}
-	return lipgloss.NewStyle().Padding(1).Foreground(lipgloss.Color("3"))
-}
-
-func todoStyle(m model) lipgloss.Style {
-	if m.sel == TodoSect {
-		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Height(17)
-	}
-	return lipgloss.NewStyle().Padding(1).Height(17)
-}
-
-func todoItemStyle(m model, i byte) lipgloss.Style {
-	if i == m.todo.sel {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-	}
-	return lipgloss.NewStyle()
-}
-
 // CUSTOM TYPES //
 // clockType types
 type ClockType byte
-
-const (
-	H12 ClockType = iota
-	H24
-)
-// keep this variable in sync with number of clock types available
-// should always be numberOfClock - 1
-const HIGHEST_CLOCK ClockType = 1
 
 func incClk (c ClockType) ClockType {
 	if c == HIGHEST_CLOCK {
@@ -101,10 +57,6 @@ func decSel (s Section) Section{
 }
 
 // Todo list types
-const TODO_LIST string = "../.cgtodo"
-// where to look for the todolist
-// can be written as an absolute path
-// or relative to where it's being launched from
 
 type Todo struct {
 	tasks  []Task
@@ -132,7 +84,7 @@ func initialModel() model {
 	initTasks := fetchTasks()
 	ti := textinput.New()
 	ti.Blur()
-	ti.Placeholder = "      what to do...      "
+	ti.Placeholder = TODO_PLACEHOLDER
 	ti.Width = 25
 
 	return model {
@@ -145,8 +97,7 @@ func initialModel() model {
 		clkTyp: 0,
 		todoInput: ti,
 		vpStart: 0,
-		vpEnd: 14,
-		// TODO: pull this out to a const instead of hard code
+		vpEnd: TODO_VP_LEN - 1,
 	}
 }
 
@@ -174,8 +125,7 @@ func styledTaskString (m model) string {
 	for i, t := range ts {
 		if t.task != "" && i>=m.vpStart && i <= m.vpEnd{
 			if byte(i)==m.todo.sel {
-				// TODO: pull this prefix out into a const
-				tdl += fmt.Sprint("⊢", t.task, "\n")
+				tdl += fmt.Sprint(TODO_SEL_PREF, t.task, "\n")
 			} else {
 				tdl += fmt.Sprint(" ", t.task, "\n")
 			}
@@ -221,7 +171,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case TickMsg:
 			if !slices.Equal(m.todo.tasks, fetchTasks()){
 				m.todo.tasks = fetchTasks()
-				if int(m.todo.sel) >= len(m.todo.tasks)-1{
+				for int(m.todo.sel) >= len(m.todo.tasks)-1{
 					m.todo.sel--
 				}
 			}
@@ -375,7 +325,7 @@ func (m model) View() string {
 	tdl = strings.TrimSpace(tdl)
 	tdl = lipgloss.JoinVertical(.5, tdl)
 	todo := todoStyle(m).Render(lipgloss.JoinVertical(.5,
-		"todo",
+		TODO_LABEL,
 		tdl,
 		m.todoInput.View()))
 // here's the actual view to be rendered
@@ -401,17 +351,25 @@ func genClock (m model) string{
 			if hour == 0 {
 				hour = 12
 			}
-			time := stringTime(hour, min, sec)
-			return fmt.Sprintf("%s\n%s\n%s",
-				timeTopLine(time),
-				timeMidLine(time)+ampm,
-				timeBotLine(time))
+			top := stringTime(hour, min, sec)
+			mid := top // all three of these
+			bot := top // should be equal
+			for i,v := range digi3x3 {
+				top = strings.ReplaceAll(top, i, v["top"])
+				mid = strings.ReplaceAll(mid, i, v["mid"])
+				bot = strings.ReplaceAll(bot, i, v["bot"])
+			}
+			return fmt.Sprintf("%s\n%s\n%s", top, mid+ampm, bot)
 		case H24:
-			time := stringTime(hour, min, sec)
-			return fmt.Sprintf("%s\n%s\n%s",
-				timeTopLine(time),
-				timeMidLine(time),
-				timeBotLine(time))
+			top := stringTime(hour, min, sec)
+			mid := top // all three of these
+			bot := top // should be equal
+			for i,v := range digi3x3 {
+				top = strings.ReplaceAll(top, i, v["top"])
+				mid = strings.ReplaceAll(mid, i, v["mid"])
+				bot = strings.ReplaceAll(bot, i, v["bot"])
+			}
+			return fmt.Sprintf("%s\n%s\n%s", top, mid, bot)
 	}
 	return ""
 }
@@ -523,50 +481,6 @@ func daysInMonth(leap bool, mon time.Month) int {
 }
 
 
-func timeTopLine (time string) string {
-	time = strings.ReplaceAll(time, "1", OneTop)
-	time = strings.ReplaceAll(time, "2", TwoTop)
-	time = strings.ReplaceAll(time, "3", ThrTop)
-	time = strings.ReplaceAll(time, "4", FouTop)
-	time = strings.ReplaceAll(time, "5", FivTop)
-	time = strings.ReplaceAll(time, "6", SixTop)
-	time = strings.ReplaceAll(time, "7", SevTop)
-	time = strings.ReplaceAll(time, "8", EigTop)
-	time = strings.ReplaceAll(time, "9", NinTop)
-	time = strings.ReplaceAll(time, "0", ZerTop)
-	time = strings.ReplaceAll(time, ":", ColTop)
-	return time
-}
-
-func timeMidLine (time string) string {
-	time = strings.ReplaceAll(time, "1", OneMid)
-	time = strings.ReplaceAll(time, "2", TwoMid)
-	time = strings.ReplaceAll(time, "3", ThrMid)
-	time = strings.ReplaceAll(time, "4", FouMid)
-	time = strings.ReplaceAll(time, "5", FivMid)
-	time = strings.ReplaceAll(time, "6", SixMid)
-	time = strings.ReplaceAll(time, "7", SevMid)
-	time = strings.ReplaceAll(time, "8", EigMid)
-	time = strings.ReplaceAll(time, "9", NinMid)
-	time = strings.ReplaceAll(time, "0", ZerMid)
-	time = strings.ReplaceAll(time, ":", ColMid)
-	return time
-}
-
-func timeBotLine (time string) string {
-	time = strings.ReplaceAll(time, "1", OneBot)
-	time = strings.ReplaceAll(time, "2", TwoBot)
-	time = strings.ReplaceAll(time, "3", ThrBot)
-	time = strings.ReplaceAll(time, "4", FouBot)
-	time = strings.ReplaceAll(time, "5", FivBot)
-	time = strings.ReplaceAll(time, "6", SixBot)
-	time = strings.ReplaceAll(time, "7", SevBot)
-	time = strings.ReplaceAll(time, "8", EigBot)
-	time = strings.ReplaceAll(time, "9", NinBot)
-	time = strings.ReplaceAll(time, "0", ZerBot)
-	time = strings.ReplaceAll(time, ":", ColBot)
-	return time
-}
 
 func stringTime (hour, min, sec int) string {
 	var h,m,s string
@@ -596,40 +510,130 @@ func main() {
 	}
 }
 
-// constants
+// CONSTANTS and vars FOR CONFIGURATION
+// GLOBAL
 
+// style for whole app
+var appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.Color("2"))
+
+// CLOCK
+
+// keep this variable should always be exactly 1 less than the amount of
+// ClockTypes you have.  for two ClockTypes HIGHEST_CLOCK is 1.  if you add a
+// ClockType then increment it, if you take one away, decrement it
+// you must also update the genClock function just under the view to handle
+// you're new ClockType.
+const HIGHEST_CLOCK ClockType = 1
 const (
-	OneTop = " ╻ "
-	OneMid = " ┃ "
-	OneBot = " ╹ "
-	TwoTop = "╺━┓"
-	TwoMid = "┏━┛"
-	TwoBot = "┗━╸"
-	ThrTop = "╺━┓"
-	ThrMid = "╺━┫"
-	ThrBot = "╺━┛"
-	FouTop = "╻ ╻"
-	FouMid = "┗━┫"
-	FouBot = "  ╹"
-	FivTop = "┏━╸"
-	FivMid = "┗━┓"
-	FivBot = "╺━┛"
-	SixTop = "┏━╸"
-	SixMid = "┣━┓"
-	SixBot = "┗━┛"
-	SevTop = "╺━┓"
-	SevMid = "  ┃"
-	SevBot = "  ╹"
-	EigTop = "┏━┓"
-	EigMid = "┣━┫"
-	EigBot = "┗━┛"
-	NinTop = "┏━┓"
-	NinMid = "┗━┫"
-	NinBot = "╺━┛"
-	ZerTop = "┏━┓"
-	ZerMid = "┃ ┃"
-	ZerBot = "┗━┛"
-	ColTop = "╻"
-	ColMid = " "
-	ColBot = "╹"
+	H12 ClockType = iota
+	H24
 )
+
+func clockStyle(m model) lipgloss.Style {
+	if m.sel == ClockSect {
+		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("5"))
+	}
+	return lipgloss.NewStyle().Padding(1).Foreground(lipgloss.Color("5"))
+}
+
+// CALENDAR
+
+var calCurrDay = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
+var othMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+
+func calStyle(m model) lipgloss.Style {
+	if m.sel == CalSect {
+		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("3"))
+	}
+	return lipgloss.NewStyle().Padding(1).Foreground(lipgloss.Color("3"))
+}
+
+//TODO
+const(
+	// where to look for the todolist
+	// can be written as an absolute path
+	// or relative to where it's being launched from
+	TODO_LIST string = "../.cgtodo"
+	// how much vertical space for the todo section to take
+	// this should be equal to
+	//   TODO_VP_LEN
+	// + The number of lines in your TODO_LABEL
+	// + 1 for the text input line
+	// eg. TODO_VP_LEN = 15 + 1 line label + 1 = 17
+	TODO_HEIGHT int = 17
+	// the number of tasks to be visible at a time
+	TODO_VP_LEN int = 15
+	// label for the todo section
+	TODO_LABEL string = "todo"
+	// prefix for selected todo task
+	TODO_SEL_PREF string = "⊢"
+	// placeholder text for the textinpu
+	TODO_PLACEHOLDER string = "      what to do...      "
+)
+
+func todoStyle(m model) lipgloss.Style {
+	if m.sel == TodoSect {
+		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Height(TODO_HEIGHT)
+	}
+	return lipgloss.NewStyle().Padding(1).Height(17)
+}
+
+
+// misc
+var digi3x3 = map[string]map[string]string{
+	"1": {
+		"top": " ╻ ",
+		"mid": " ┃ ",
+		"bot": " ╹ ",
+	},
+	"2": {
+		"top": "╺━┓",
+		"mid": "┏━┛",
+		"bot": "┗━╸",
+	},
+	"3": {
+		"top": "╺━┓",
+		"mid": "╺━┫",
+		"bot": "╺━┛",
+	},
+	"4": {
+		"top": "╻ ╻",
+		"mid": "┗━┫",
+		"bot": "  ╹",
+	},
+	"5": {
+		"top": "┏━╸",
+		"mid": "┗━┓",
+		"bot": "╺━┛",
+	},
+	"6": {
+		"top": "┏━╸",
+		"mid": "┣━┓",
+		"bot": "┗━┛",
+	},
+	"7": {
+		"top": "╺━┓",
+		"mid": "  ┃",
+		"bot": "  ╹",
+	},
+	"8": {
+		"top": "┏━┓",
+		"mid": "┣━┫",
+		"bot": "┗━┛",
+	},
+	"9": {
+		"top": "┏━┓",
+		"mid": "┗━┫",
+		"bot": "╺━┛",
+	},
+	"0": {
+		"top": "┏━┓",
+		"mid": "┃ ┃",
+		"bot": "┗━┛",
+	},
+	":": {
+		"top": "╻",
+		"mid": " ",
+		"bot": "╹",
+	},
+}
