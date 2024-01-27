@@ -8,7 +8,11 @@ import (
 // GLOBAL
 
 // style for whole app
-var appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.Color("2"))
+func appStyle (m model) lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(lipgloss.DoubleBorder()).
+		BorderForeground(lipgloss.ANSIColor(m.colors.appBorder))
+}
 
 // CLOCK
 

@@ -31,7 +31,6 @@ but still have a while a lot of work to do before I can feel complete and happy 
  -- also just see the calendar for that month
  -- show a general/longterm todo list and a day specific todo list.
 - set constants for controls
-- read in configs from a seperate file
 
 # maybe in the future
 

@@ -69,6 +69,41 @@ type Task struct {
 	// date Time.time.Date()
 }
 
+type date struct {
+	year  int
+	month time.Month
+	day   int
+}
+
+func backOneDay (d date) date {
+	if d.day > 1 {
+	// easy solution just have to change day
+		d.day--
+	} else {// otherwise day was 1 and need to shift month and maybe year too
+		d.month = backOneMonth(d.month)
+		d.day = daysInMonth(d.year%4==0, d.month)
+		if d.month.String() == "December"{
+			d.year--
+		}
+	}
+	return d
+}
+
+func forwardOneDay (d date) date {
+	if d.day < daysInMonth(d.year%4==0, d.month) {
+		// easy case just change day
+		d.day++
+	} else {
+		// otherwise have to change month too
+		d.day = 1
+		d.month = forwardOneMonth(d.month)
+		if d.month.String() == "January" {
+			d.year++
+		}
+	}
+	return d
+}
+
 // model
 type model struct {
 	dt         time.Time
@@ -78,6 +113,8 @@ type model struct {
 	todoInput  textinput.Model
 	vpStart    int
 	vpEnd      int
+	colors     Colors
+	selDate    date
 }
 
 func initialModel() model {
@@ -86,7 +123,7 @@ func initialModel() model {
 	ti.Blur()
 	ti.Placeholder = TODO_PLACEHOLDER
 	ti.Width = 25
-
+	year, month, day := time.Now().Date()
 	return model {
 		dt: time.Now(),
 		todo: Todo {
@@ -98,7 +135,19 @@ func initialModel() model {
 		todoInput: ti,
 		vpStart: 0,
 		vpEnd: TODO_VP_LEN - 1,
+		colors: Colors {
+			appBorder: 2,
+		},
+		selDate: date {
+			year: year,
+			month: month,
+			day: day,
+		},
 	}
+}
+
+type Colors struct {
+	appBorder int
 }
 
 func writeTasks (ts []Task) {
@@ -189,6 +238,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case "shift+tab":
 					m.sel = decSel (m.sel)
 					return m, nil
+				case ",":
+					m.colors.appBorder-- // -1 - 15
+					return m, nil
+				case ".":
+					m.colors.appBorder++
+					return m, nil
 			}
 			// section specific keypresses
 			switch m.sel {
@@ -206,7 +261,48 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					switch msg.String(){
 
 // cal specific keypresses
-
+						case " ": // going back to current day
+							yr,mon,d := time.Now().Date()
+							m.selDate.year = yr
+							m.selDate.month = mon
+							m.selDate.day = d
+							return m, nil
+						case "left": // going back one day
+							m.selDate = backOneDay(m.selDate)
+							return m,nil
+						case "right": // going foward one day
+							m.selDate = forwardOneDay(m.selDate)
+							return m,nil
+						case "up": // going back 7 days
+							for i:=0; i<7; i++ {
+								m.selDate = backOneDay(m.selDate)
+							}
+							return m,nil
+						case "down": // going forward 7 days
+							for i:=0; i<7; i++ {
+								m.selDate = forwardOneDay(m.selDate)
+							}
+							return m,nil
+						case "ctrl+left": // going back one month
+							m.selDate.month = backOneMonth (m.selDate.month)
+							if m.selDate.month.String() == "December" {
+								m.selDate.year--
+							}
+							dim := daysInMonth(m.selDate.year%4==0, m.selDate.month)
+							if m.selDate.day > dim {
+								m.selDate.day = dim
+							}
+							return m,nil
+						case "ctrl+right": // going fotward one month
+							m.selDate.month = forwardOneMonth (m.selDate.month)
+							if m.selDate.month.String() == "January" {
+								m.selDate.year++
+							}
+							dim := daysInMonth(m.selDate.year%4==0, m.selDate.month)
+							if m.selDate.day > dim {
+								m.selDate.day = dim
+							}
+							return m,nil
 					}
 				case TodoSect:
 					switch msg.String(){
@@ -314,10 +410,17 @@ func (m model) View() string {
 		day,
 		year,)
 // creating the calendar
-	// TODO: make this reference a value from m when I implement moving months
-	calDays := genCalDays (true, month, day, wd)
+	leap := m.selDate.year%4 == 0
+	selMon := m.selDate.month
+	selDay := m.selDate.day
+	selWd := time.Date(m.selDate.year,
+		selMon,
+		selDay,
+		1,1,1,1,time.Local).Weekday()
+
+	calDays := genCalDays (leap, selMon, selDay, selWd)
 	cal := calStyle(m).Render(lipgloss.JoinVertical(0.5,
-		fmt.Sprintf("%s  %d\n", month.String(), year),
+		fmt.Sprintf("%s  %d\n", selMon.String(), m.selDate.year),
 		"Sun Mon Tue Wed Thu Fri Sat",
 		calDays,))
 // creating the todo
@@ -329,7 +432,7 @@ func (m model) View() string {
 		tdl,
 		m.todoInput.View()))
 // here's the actual view to be rendered
-		return appStyle.Render(lipgloss.JoinVertical(0.5,
+		return appStyle(m).Render(lipgloss.JoinVertical(0.5,
 			clock,
 			mdy,
 			cal,
@@ -453,6 +556,14 @@ func backOneMonth(mon time.Month) time.Month{
 		return 12
 	} else {
 		return mon - 1
+	}
+}
+
+func forwardOneMonth(mon time.Month) time.Month{
+	if mon == 12 {
+		return 1
+	} else {
+		return mon + 1
 	}
 }
 
