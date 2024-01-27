@@ -9,9 +9,7 @@ import (
 
 // style for whole app
 func appStyle (m model) lipgloss.Style {
-	return lipgloss.NewStyle().
-		Border(lipgloss.DoubleBorder()).
-		BorderForeground(lipgloss.ANSIColor(m.colors.appBorder))
+	return lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.ANSIColor(2))
 }
 
 // CLOCK

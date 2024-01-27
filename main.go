@@ -113,7 +113,6 @@ type model struct {
 	todoInput  textinput.Model
 	vpStart    int
 	vpEnd      int
-	colors     Colors
 	selDate    date
 }
 
@@ -135,9 +134,6 @@ func initialModel() model {
 		todoInput: ti,
 		vpStart: 0,
 		vpEnd: TODO_VP_LEN - 1,
-		colors: Colors {
-			appBorder: 2,
-		},
 		selDate: date {
 			year: year,
 			month: month,
@@ -146,9 +142,6 @@ func initialModel() model {
 	}
 }
 
-type Colors struct {
-	appBorder int
-}
 
 func writeTasks (ts []Task) {
 	os.Remove(TODO_LIST)
@@ -237,12 +230,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				case "shift+tab":
 					m.sel = decSel (m.sel)
-					return m, nil
-				case ",":
-					m.colors.appBorder-- // -1 - 15
-					return m, nil
-				case ".":
-					m.colors.appBorder++
 					return m, nil
 			}
 			// section specific keypresses

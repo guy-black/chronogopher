@@ -13,6 +13,10 @@ but still have a while a lot of work to do before I can feel complete and happy 
 - shift-tab to go up one section
 ## clock
 - left/right: cycle through clocks.  so far only 12hour and 24 hour digital clocks available
+## Calendar
+- left/right go back/forwards 1 day
+- down/up go back/forwards 1 week
+- ctrl+left/right go back/forwards 1 month
 ## todo list
 - up/down: scroll through todo items
 - delete: delete selected todo item
@@ -27,16 +31,17 @@ but still have a while a lot of work to do before I can feel complete and happy 
 
 # roadmap to 1.0
 
-- when calendar selected move day cursor up, down, left, and right around calendar
- -- also just see the calendar for that month
- -- show a general/longterm todo list and a day specific todo list.
 - set constants for controls
+
 
 # maybe in the future
 
 - scheule tasks to be done on a certain day or time
 -- attach a glyph to days on the calendar if there's a task scheduled that day
 -- do some kind of alarm thing
+-- show a general/longterm todo list and a day specific todo list.
+
+- colors adjustable while running
 
 - different clock faces
 -- large 5x6
