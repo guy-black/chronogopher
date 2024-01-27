@@ -314,9 +314,9 @@ func (m model) View() string {
 		day,
 		year,)
 // creating the calendar
+	// TODO: make this reference a value from m when I implement moving months
 	calDays := genCalDays (true, month, day, wd)
 	cal := calStyle(m).Render(lipgloss.JoinVertical(0.5,
-		// TODO: make this reference a value from m when I implement moving months
 		fmt.Sprintf("%s  %d\n", month.String(), year),
 		"Sun Mon Tue Wed Thu Fri Sat",
 		calDays,))
@@ -394,28 +394,29 @@ func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
 	daysInPrevMon := daysInMonth(leap, backOneMonth(mon))
 	daysToPrint := 42 // 6 weeks * 7 days
 	for wdfm > 0 {
-		finStr = fmt.Sprint(daysInPrevMon, " ") + finStr
+		// printing previous month days
+		finStr = othMonthDay.Render(fmt.Sprint(daysInPrevMon, " ")) + finStr
 		daysInPrevMon--
 		wdfm--
 		daysToPrint--
 	}
 	daysThisMon := daysInMonth(leap, mon)
 	for i:=1; i<=daysThisMon; i++ {
-		dayNum := ""
 		if i==day{
 			if i<10 {
-				dayNum = fmt.Sprint("  ", i, " ")
+				// printing selected day
+				finStr += calCurrDay.Render(fmt.Sprint("  ", i, " "))
 			} else {
-				dayNum = fmt.Sprint(" ", i, " ")
+				finStr += calCurrDay.Render(fmt.Sprint(" ", i, " "))
 			}
 		} else {
 			if i<10 {
-				dayNum = fmt.Sprint("  ", i, " ")
+				// printing days of the selected month
+				finStr += currMonthDay.Render(fmt.Sprint("  ", i, " "))
 			} else {
-				dayNum = fmt.Sprint(" ", i, " ")
+				finStr += currMonthDay.Render(fmt.Sprint(" ", i, " "))
 			}
 		}
-		finStr += dayNum
 		daysToPrint--
 		if daysToPrint%7 == 0 && daysToPrint != 0 {
 			finStr += "\n"
@@ -426,18 +427,16 @@ func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
 	// newline is needed by days left to print while counting up days to print
 	dltp := daysToPrint
 	for i:=1; i<=dltp; i++ {
-		dayNum := ""
 		if i<10 {
-			dayNum = fmt.Sprint("  ", i, " ")
+			finStr += othMonthDay.Render(fmt.Sprint("  ", i, " "))
 		} else {
-			dayNum = fmt.Sprint(" ", i, " ")
+			finStr += othMonthDay.Render(fmt.Sprint(" ", i, " "))
 		}
-		finStr += dayNum
 		daysToPrint--
 		if daysToPrint%7 == 0 && daysToPrint != 0 {
 			finStr += "\n"
 		}
-	} // 50% grug brain
+	}
 	return finStr
 }
 
@@ -539,13 +538,15 @@ func clockStyle(m model) lipgloss.Style {
 // CALENDAR
 
 var calCurrDay = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
+var currMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
 var othMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+
 
 func calStyle(m model) lipgloss.Style {
 	if m.sel == CalSect {
-		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("3"))
+		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
 	}
-	return lipgloss.NewStyle().Padding(1).Foreground(lipgloss.Color("3"))
+	return lipgloss.NewStyle().Padding(1)
 }
 
 //TODO
