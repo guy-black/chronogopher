@@ -5,15 +5,17 @@ import (
 )
 
 // CONSTANTS and vars FOR CONFIGURATION
-// GLOBAL
 
-// style for whole app
-func appStyle (m model) lipgloss.Style {
-	return lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.ANSIColor(2))
-}
+// GLOBAL
+var appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.ANSIColor(2))
+// conrols
+const (
+	QUIT string = "ctrl+q"
+	CYCLE_SECTS string = "tab"
+	REVCYCLE_SECTS string = "shift+tab"
+)
 
 // CLOCK
-
 // keep this variable should always be exactly 1 less than the amount of
 // ClockTypes you have.  for two ClockTypes HIGHEST_CLOCK is 1.  if you add a
 // ClockType then increment it, if you take one away, decrement it
@@ -24,33 +26,46 @@ const (
 	H12 ClockType = iota
 	H24
 )
-
 func clockStyle(m model) lipgloss.Style {
 	if m.sel == ClockSect {
 		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Foreground(lipgloss.Color("5"))
 	}
 	return lipgloss.NewStyle().Padding(1).Foreground(lipgloss.Color("5"))
 }
+// conrols
+const (
+	PREV_CLOCK string = "left"
+	NEXT_CLOCK string = "right"
+)
 
 // CALENDAR
 
 var calCurrDay = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
 var currMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
 var othMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
-
-
 func calStyle(m model) lipgloss.Style {
 	if m.sel == CalSect {
 		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
 	}
 	return lipgloss.NewStyle().Padding(1)
 }
+//controls
+const (
+		CAL_TODAY string = " "
+		CAL_PREV_DAY string = "left"
+		CAL_NEXT_DAY string = "right"
+		CAL_PREV_WEEK string = "up"
+		CAL_NEXT_WEEK string = "down"
+		CAL_PREV_MON string = "ctrl+left"
+		CAL_NEXT_MON string = "ctrl+right"
+)
 
 //TODO
 const(
 	// where to look for the todolist
 	// can be written as an absolute path
 	// or relative to where it's being launched from
+	// if this file does not exist, it will be created
 	TODO_LIST string = "../.cgtodo"
 	// how much vertical space for the todo section to take
 	// this should be equal to
@@ -68,13 +83,21 @@ const(
 	// placeholder text for the textinpu
 	TODO_PLACEHOLDER string = "      what to do...      "
 )
-
 func todoStyle(m model) lipgloss.Style {
 	if m.sel == TodoSect {
 		return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Height(TODO_HEIGHT)
 	}
 	return lipgloss.NewStyle().Padding(1).Height(17)
 }
+// controls
+const (
+	TD_UP string = "up"
+	TD_DOWN string = "down"
+	TD_NEW_ADD string = "enter"
+	TD_COPY_REPL string = "alt+enter"
+	TD_CANCEL string = "esc"
+	TD_DELETE string = "delete"
+)
 
 
 // misc

@@ -32,8 +32,7 @@ but still have a while a lot of work to do before I can feel complete and happy 
 
 # roadmap to 1.0
 
-- set constants for controls
-- organize code
+- organize code and config file
 
 
 # maybe in the future

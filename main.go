@@ -223,12 +223,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// reacting to keypresses
 			switch msg.String() {
 				// global key press actions!!!
-				case "ctrl+q":
+				case QUIT:
 					return  m, tea.Quit
-				case "tab":
+				case CYCLE_SECTS:
 					m.sel = incSel (m.sel)
 					return m, nil
-				case "shift+tab":
+				case REVCYCLE_SECTS:
 					m.sel = decSel (m.sel)
 					return m, nil
 			}
@@ -239,38 +239,38 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // clock specific keypresses
 
-						case "left":
+						case PREV_CLOCK:
 							m.clkTyp = decClk(m.clkTyp)
-						case "right" :
+						case NEXT_CLOCK :
 							m.clkTyp = incClk(m.clkTyp)
 					}
 				case CalSect:
 					switch msg.String(){
 
 // cal specific keypresses
-						case " ": // going back to current day
+						case CAL_TODAY: // going back to current day
 							yr,mon,d := time.Now().Date()
 							m.selDate.year = yr
 							m.selDate.month = mon
 							m.selDate.day = d
 							return m, nil
-						case "left": // going back one day
+						case CAL_PREV_DAY: // going back one day
 							m.selDate = backOneDay(m.selDate)
 							return m,nil
-						case "right": // going foward one day
+						case CAL_NEXT_DAY: // going foward one day
 							m.selDate = forwardOneDay(m.selDate)
 							return m,nil
-						case "up": // going back 7 days
+						case CAL_PREV_WEEK: // going back 7 days
 							for i:=0; i<7; i++ {
 								m.selDate = backOneDay(m.selDate)
 							}
 							return m,nil
-						case "down": // going forward 7 days
+						case CAL_NEXT_WEEK: // going forward 7 days
 							for i:=0; i<7; i++ {
 								m.selDate = forwardOneDay(m.selDate)
 							}
 							return m,nil
-						case "ctrl+left": // going back one month
+						case CAL_PREV_MON: // going back one month
 							m.selDate.month = backOneMonth (m.selDate.month)
 							if m.selDate.month.String() == "December" {
 								m.selDate.year--
@@ -280,7 +280,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								m.selDate.day = dim
 							}
 							return m,nil
-						case "ctrl+right": // going fotward one month
+						case CAL_NEXT_MON: // going fotward one month
 							m.selDate.month = forwardOneMonth (m.selDate.month)
 							if m.selDate.month.String() == "January" {
 								m.selDate.year++
@@ -296,7 +296,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // todo specific keypresses
 
-						case "up":
+						case TD_UP:
 							if int(m.todo.sel) == 0 {
 							// TODO: figure out why I need to subtract two instead of one here and below
 								m.todo.sel = byte(len(m.todo.tasks)-2)
@@ -314,7 +314,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								}
 								return m, nil
 							}
-						case "down":
+						case TD_DOWN:
 							if m.todo.sel == byte(len(m.todo.tasks)-2) {
 							// TODO: figure out why I need to subtract two instead of one here and below
 								m.todo.sel = 0
@@ -329,7 +329,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								}
 								return m, nil
 							}
-						case "enter":
+						case TD_NEW_ADD:
 							if m.todoInput.Focused() {
 								// if enter is pressed while it's focused
 								// update model and file todolist
@@ -345,7 +345,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								foc := m.todoInput.Focus()
 								return m, foc
 							}
-						case "alt+enter":
+						case TD_COPY_REPL:
 							if m.todoInput.Focused() {
 								// check that it's not blank
 								nt := m.todoInput.Value()
@@ -363,11 +363,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								m.todoInput.SetValue(txt)
 								return m,foc
 							}
-						case "esc":
+						case TD_CANCEL:
 							m.todoInput.Reset()
 							m.todoInput.Blur()
 							return m, nil
-						case "delete":
+						case TD_DELETE:
 							selint := int(m.todo.sel)
 							m.todo.tasks = slices.Delete(m.todo.tasks, selint, selint+1)
 							writeTasks(m.todo.tasks)
@@ -419,7 +419,7 @@ func (m model) View() string {
 		tdl,
 		m.todoInput.View()))
 // here's the actual view to be rendered
-		return appStyle(m).Render(lipgloss.JoinVertical(0.5,
+		return appStyle.Render(lipgloss.JoinVertical(0.5,
 			clock,
 			mdy,
 			cal,
