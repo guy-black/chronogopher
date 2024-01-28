@@ -4,6 +4,7 @@ a project to learn Go as well as imperative programming in general.  Currently j
 it is officially technically good enough to replace my side panel eww widget and the window of tty-clock I keep open on my main workspace
 but still have a while a lot of work to do before I can feel complete and happy about it
 
+![screenshot](https://raw.githubusercontent.com/guy-black/chronogopher/main/screenshot.png)
 
 # controls:
 
@@ -32,6 +33,7 @@ but still have a while a lot of work to do before I can feel complete and happy 
 # roadmap to 1.0
 
 - set constants for controls
+- organize code
 
 
 # maybe in the future
