@@ -6,7 +6,7 @@ but still have a while a lot of work to do before I can feel complete and happy 
 
 ![screenshot](https://raw.githubusercontent.com/guy-black/chronogopher/main/screenshot.png)
 
-# controls:
+# default controls:
 
 ## appwide:
 - ctrl+q to quit
@@ -29,13 +29,27 @@ but still have a while a lot of work to do before I can feel complete and happy 
   - if text field is active and typed in, replace selected todo item with typed text
   - if text field is not active, make it active with the text of the selected todo item prefilled in
 
+# setup and install
 
-# roadmap to 1.0
+after cloning the repo, you can run the app right away with default configs
+```
+go run .
+```
+or build an executable with
+```
+go build .
+```
+to customize, make a copy of `defaultConf.go` and edit it to your liking.
+to run your configured version
+```
+go run main.go <yourConfigFile>.go
+```
+or to build the executable
+```
+go run main.go <yourConfigFile>.go
+```
 
-- organize code and config file
-
-
-# maybe in the future
+# features planned to be implemented in the future
 
 - scheule tasks to be done on a certain day or time
 -- attach a glyph to days on the calendar if there's a task scheduled that day
