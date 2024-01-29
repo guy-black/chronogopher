@@ -66,82 +66,8 @@ type Todo struct {
 type Task struct {
 	task     string
 	// alarm Time.time
-	// date Time.time.Date()
+	// date  date
 }
-
-type date struct {
-	year  int
-	month time.Month
-	day   int
-}
-
-func backOneDay (d date) date {
-	if d.day > 1 {
-	// easy solution just have to change day
-		d.day--
-	} else {// otherwise day was 1 and need to shift month and maybe year too
-		d.month = backOneMonth(d.month)
-		d.day = daysInMonth(d.year%4==0, d.month)
-		if d.month.String() == "December"{
-			d.year--
-		}
-	}
-	return d
-}
-
-func forwardOneDay (d date) date {
-	if d.day < daysInMonth(d.year%4==0, d.month) {
-		// easy case just change day
-		d.day++
-	} else {
-		// otherwise have to change month too
-		d.day = 1
-		d.month = forwardOneMonth(d.month)
-		if d.month.String() == "January" {
-			d.year++
-		}
-	}
-	return d
-}
-
-// model
-type model struct {
-	dt         time.Time
-	todo       Todo
-	sel        Section
-	clkTyp     ClockType
-	todoInput  textinput.Model
-	vpStart    int
-	vpEnd      int
-	selDate    date
-}
-
-func initialModel() model {
-	initTasks := fetchTasks()
-	ti := textinput.New()
-	ti.Blur()
-	ti.Placeholder = TODO_PLACEHOLDER
-	ti.Width = 25
-	year, month, day := time.Now().Date()
-	return model {
-		dt: time.Now(),
-		todo: Todo {
-			tasks: initTasks,
-			sel: 0,
-		},
-		sel: 2,
-		clkTyp: 0,
-		todoInput: ti,
-		vpStart: 0,
-		vpEnd: TODO_VP_LEN - 1,
-		selDate: date {
-			year: year,
-			month: month,
-			day: day,
-		},
-	}
-}
-
 
 func writeTasks (ts []Task) {
 	os.Remove(TODO_LIST)
@@ -189,6 +115,82 @@ func fetchTasks () []Task {
 		}
 	}
 	return initTasks
+}
+
+// date type
+
+type date struct {
+	year  int
+	month time.Month
+	day   int
+}
+
+func backOneDay (d date) date {
+	if d.day > 1 {
+	// easy solution just have to change day
+		d.day--
+	} else {// otherwise day was 1 and need to shift month and maybe year too
+		d.month = backOneMonth(d.month)
+		d.day = daysInMonth(d.year%4==0, d.month)
+		if d.month.String() == "December"{
+			d.year--
+		}
+	}
+	return d
+}
+
+func forwardOneDay (d date) date {
+	if d.day < daysInMonth(d.year%4==0, d.month) {
+		// easy case just change day
+		d.day++
+	} else {
+		// otherwise have to change month too
+		d.day = 1
+		d.month = forwardOneMonth(d.month)
+		if d.month.String() == "January" {
+			d.year++
+		}
+	}
+	return d
+}
+
+// model
+
+type model struct {
+	dt         time.Time
+	todo       Todo
+	sel        Section
+	clkTyp     ClockType
+	todoInput  textinput.Model
+	vpStart    int
+	vpEnd      int
+	selDate    date
+}
+
+func initialModel() model {
+	initTasks := fetchTasks()
+	ti := textinput.New()
+	ti.Blur()
+	ti.Placeholder = TODO_PLACEHOLDER
+	ti.Width = 25
+	year, month, day := time.Now().Date()
+	return model {
+		dt: time.Now(),
+		todo: Todo {
+			tasks: initTasks,
+			sel: 0,
+		},
+		sel: 2,
+		clkTyp: 0,
+		todoInput: ti,
+		vpStart: 0,
+		vpEnd: TODO_VP_LEN - 1,
+		selDate: date {
+			year: year,
+			month: month,
+			day: day,
+		},
+	}
 }
 
 type TickMsg time.Time
@@ -248,6 +250,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					switch msg.String(){
 
 // cal specific keypresses
+
 						case CAL_TODAY: // going back to current day
 							yr,mon,d := time.Now().Date()
 							m.selDate.year = yr
@@ -383,7 +386,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.todoInput, cmd = m.todoInput.Update(msg)
 	return m, cmd
 }
-
 
 func (m model) View() string {
 // creating the clock section
@@ -577,8 +579,6 @@ func daysInMonth(leap bool, mon time.Month) int {
 	}
 }
 
-
-
 func stringTime (hour, min, sec int) string {
 	var h,m,s string
 	if hour<10 {
@@ -606,4 +606,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-

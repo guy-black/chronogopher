@@ -10,8 +10,11 @@ import (
 var appStyle = lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).BorderForeground(lipgloss.ANSIColor(2))
 // conrols
 const (
+	// to close chronogopher
 	QUIT string = "ctrl+q"
+	// to cycle forwards through the sections
 	CYCLE_SECTS string = "tab"
+	// to cycle backwards through the sections
 	REVCYCLE_SECTS string = "shift+tab"
 )
 
@@ -34,14 +37,19 @@ func clockStyle(m model) lipgloss.Style {
 }
 // conrols
 const (
+	// to cycle back through clocks
+	// to cycle foward through clocks
 	PREV_CLOCK string = "left"
 	NEXT_CLOCK string = "right"
 )
 
 // CALENDAR
 
+// style for current calendar day
 var calCurrDay = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
+// style for calendar days of the selected month
 var currMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
+// style's for other days from the next or previous month
 var othMonthDay = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
 func calStyle(m model) lipgloss.Style {
 	if m.sel == CalSect {
@@ -51,13 +59,20 @@ func calStyle(m model) lipgloss.Style {
 }
 //controls
 const (
-		CAL_TODAY string = " "
-		CAL_PREV_DAY string = "left"
-		CAL_NEXT_DAY string = "right"
-		CAL_PREV_WEEK string = "up"
-		CAL_NEXT_WEEK string = "down"
-		CAL_PREV_MON string = "ctrl+left"
-		CAL_NEXT_MON string = "ctrl+right"
+	// to go back to current day
+	CAL_TODAY string = " "
+	// to go to the previous day
+	CAL_PREV_DAY string = "left"
+	// to go to the next day
+	CAL_NEXT_DAY string = "right"
+	// to go back one week
+	CAL_PREV_WEEK string = "up"
+	// to go foward one week
+	CAL_NEXT_WEEK string = "down"
+	// to go back one month
+	CAL_PREV_MON string = "ctrl+left"
+	// to go forward one month
+	CAL_NEXT_MON string = "ctrl+right"
 )
 
 //TODO
@@ -91,11 +106,19 @@ func todoStyle(m model) lipgloss.Style {
 }
 // controls
 const (
+	// to go up
 	TD_UP string = "up"
+	// to go down
 	TD_DOWN string = "down"
+	// if text input is focused and non empty add contents as new todo item below
+	// the selected todo item else, focuses the text input
 	TD_NEW_ADD string = "enter"
+	// if text input is focused and non empty add contents as new todo item in place of the
+	// selected task else, focuses the text input and prefill it with currently selected task
 	TD_COPY_REPL string = "alt+enter"
+	// unfocuses the textinput without changing todolist
 	TD_CANCEL string = "esc"
+	// delete selected task
 	TD_DELETE string = "delete"
 )
 
