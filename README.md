@@ -42,11 +42,11 @@ go build .
 to customize, make a copy of `defaultConf.go` and edit it to your liking.
 to run your configured version
 ```
-go run main.go <yourConfigFile>.go
+go run chronogopher.go <yourConfigFile>.go
 ```
 or to build the executable
 ```
-go run main.go <yourConfigFile>.go
+go run chronogopher.go <yourConfigFile>.go
 ```
 
 # features planned to be implemented in the future
