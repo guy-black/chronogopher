@@ -392,7 +392,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							selint := int(m.todo.sel)
 							m.todo.tasks = slices.Delete(m.todo.tasks, selint, selint+1)
 							writeTasks(m.todo.tasks)
-							if selint >= len(m.todo.tasks)-1 {
+							if selint >= len(m.todo.tasks)-1 && selint >= 0 {
 								m.todo.sel--
 							}
 							return m, nil
