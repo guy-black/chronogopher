@@ -81,7 +81,7 @@ const(
 	// can be written as an absolute path
 	// or relative to where it's being launched from
 	// if this file does not exist, it will be created
-	TODO_LIST string = "../.cgtodo"
+	TODO_LIST string = ".cgtodo"
 	// how much vertical space for the todo section to take
 	// this should be equal to
 	//   TODO_VP_LEN

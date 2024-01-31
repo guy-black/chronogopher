@@ -104,14 +104,17 @@ func styledTaskString (m model) string {
 
 func fetchTasks () []Task {
 	dat, err := os.ReadFile(TODO_LIST)
-	var initTasks []Task
+	initTasks := make([]Task, 0)
 	if err!=nil {
-		initTasks = make([]Task, 0)
+		// TODO, check check if this can produce errors besdies file not found
+		// if it can than check for them and handle them.  file not found already
+		// solved 3 functions up with writeTasks
 	} else {
-		initTasks = make([]Task, 0)
 		for _,t:=range strings.Split(string(dat), "\n") {
-			nt := Task{task: t}
-			initTasks = append(initTasks, nt)
+			if t != "" {
+				nt := Task{task: t}
+ 				initTasks = append(initTasks, nt)
+			}
 		}
 	}
 	return initTasks
@@ -301,8 +304,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 						case TD_UP:
 							if int(m.todo.sel) == 0 {
-							// TODO: figure out why I need to subtract two instead of one here and below
-								m.todo.sel = byte(len(m.todo.tasks)-2)
+								m.todo.sel = byte(len(m.todo.tasks)-1)
 								if m.todo.sel > byte(m.vpEnd) {
 									se := int(m.todo.sel) - m.vpEnd
 									m.vpStart += se
@@ -318,8 +320,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								return m, nil
 							}
 						case TD_DOWN:
-							if m.todo.sel == byte(len(m.todo.tasks)-2) {
-							// TODO: figure out why I need to subtract two instead of one here and below
+							if m.todo.sel == byte(len(m.todo.tasks)-1) {
 								m.todo.sel = 0
 								m.vpStart = 0
 								m.vpEnd = 14 // basically resetting the viewport
@@ -338,32 +339,49 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								// update model and file todolist
 								nt := m.todoInput.Value()
 								m.todoInput.Reset()
-								m.todo.tasks = slices.Insert (m.todo.tasks,
-									int(m.todo.sel)+1 ,
-									Task{task: nt})
-								writeTasks(m.todo.tasks)
+								if nt != "" {
+									if len(m.todo.tasks) == 0 {
+										m.todo.tasks = [] Task {Task{task: nt}}
+										writeTasks(m.todo.tasks)
+									}else{
+										m.todo.tasks = slices.Insert (m.todo.tasks,
+											int(m.todo.sel)+1 ,
+											Task{task: nt})
+										writeTasks(m.todo.tasks)
+									}
+								}
 								// unfocus textinput
 								m.todoInput.Blur()
+								return m, nil
 							} else { // focus it
 								foc := m.todoInput.Focus()
 								return m, foc
 							}
 						case TD_COPY_REPL:
 							if m.todoInput.Focused() {
+								if int(m.todo.sel) >= len(m.todo.tasks){
+									// if sel is greater than the length of the slice of tasks
+									// should only happen on an empty list
+									// eitherway just do nothing to avoid trying to read from empty slice
+									return m, nil
+								}
 								// check that it's not blank
 								nt := m.todoInput.Value()
 								m.todoInput.Reset()
 								if nt!="" {
-									rem:=slices.Delete(m.todo.tasks, int(m.todo.sel), int(m.todo.sel)+1)
-									ins:=slices.Insert(rem, int(m.todo.sel), Task{task: nt})
+									selint:=int(m.todo.sel)
+									rem:=slices.Delete(m.todo.tasks, selint, selint+1)
+									ins:=slices.Insert(rem, selint, Task{task: nt})
 									m.todo.tasks = ins
 									writeTasks(m.todo.tasks)
 								}
 								m.todoInput.Blur()
 							} else {
 								foc := m.todoInput.Focus()
-								txt := m.todo.tasks[int(m.todo.sel)].task
-								m.todoInput.SetValue(txt)
+								if int(m.todo.sel) < len(m.todo.tasks) {
+									txt := m.todo.tasks[int(m.todo.sel)].task
+									m.todoInput.SetValue(txt)
+								}
 								return m,foc
 							}
 						case TD_CANCEL:
