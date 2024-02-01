@@ -505,7 +505,7 @@ func genCalDays(leap bool, mon time.Month, day int, wd time.Weekday) string {
 	daysToPrint := 42 // 6 weeks * 7 days
 	for wdfm > 0 {
 		// printing previous month days
-		finStr = othMonthDay.Render(fmt.Sprint(daysInPrevMon, " ")) + finStr
+		finStr = othMonthDay.Render(fmt.Sprint(" ", daysInPrevMon, " ")) + finStr
 		daysInPrevMon--
 		wdfm--
 		daysToPrint--
