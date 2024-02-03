@@ -49,6 +49,10 @@ or to build the executable
 go run chronogopher.go <yourConfigFile>.go
 ```
 
+if you're tweaking the config and recompiling often you can use the build script.
+edit $CONF and $DIR to your config file and the directory you want the binary installed to
+after updating config run `./build`
+
 # features planned to be implemented in the future
 
 - scheule tasks to be done on a certain day or time
