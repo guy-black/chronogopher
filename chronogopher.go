@@ -222,7 +222,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.todo.sel--
 				}
 			}
-			m.dt = time.Now()
+			// before updating dt get previous date
+			py, pm, pd := m.dt.Date()
+			now := time.Now()
+			cy, cm, cd := now.Date()
+			// check if the selDate is the same as the previous date
+			if py == m.selDate.year && pm == m.selDate.month && pd == m.selDate.day {
+				// selDate was equal to current day, so it should day in sync
+				// if previous year/month/day isn't equal to current, update it
+				if py != cy { m.selDate.year = cy}
+				if pm != cm { m.selDate.month = cm}
+				if pd != cd { m.selDate.day = cd}
+			}
+			m.dt = now
 			return m, doTick()
 		case tea.KeyMsg:
 			// reacting to keypresses
