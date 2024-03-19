@@ -1,9 +1,0 @@
-#!/bin/sh
-
-CONF=myconfig.go
-
-DIR=~/.local/bin/
-
-go build chronogopher.go $CONF
-
-mv chronogopher $DIR
