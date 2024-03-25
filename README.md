@@ -54,15 +54,6 @@ go run chronogopher.go <configFileToUse>.go
 ```
 # features planned to be implemented in the future
 
-- properly sync todolist with Tea.Msg
--- new const SYNC_FREQ of type Time.Duration for how often to sync
--- another function like doTick called doSync, but tea.Time will take SYNC_FREQ and it's
-  function will ignore the time and return a SyncMsg carrying the current list of tasks in
-  the TODO_LIST file as a []Task.  Either do one of two things in the update function whenever a SyncMsg tsks comes in
-    - either always replace m.todo.tasks with the tsks from SyncMsg and decrease m.todo.sel if need be, or
-    - check if m.todo.taks == tsks.  If so do nothing, if not replace replace m.todo.tasks with tsks and update m.todo.sel if need be
-    - figure out how to test which is more efficient, but it's probably a miniscule difference it'd be a decent learning experience
-
 - figure out how to make app take up entire window available
    -- for now create new consts MIN_APP_WIDTH and MIN_APP_HEIGHT, if the window is not atleast that big render an error
       instead of the app, like btop does.  Later on write funtion to calculate those values based on default clock and cal
@@ -97,6 +88,24 @@ go run chronogopher.go <configFileToUse>.go
 
 - toggle between vertical alignment, horizontal alignment, or some combination (clock/cal sidebyside over todolist,
   clock on top over sidebyside cal and todo list, etc)
+
+- recover accidentally deleted tasks
+  -- add a new value to model undoStack []Task
+  -- when a task is deleted push it onto the undoStack
+  -- create a ctrl+z keybinding to pop the top off the undoStack and add it to the todo list
+  -- the following push and pop work as expeced on slices
+```
+func pop[S ~[]E, E any](s S) (E,S) {
+	in := len(s)-1
+	return s[in], s[:in]
+}
+
+func push[S ~[]E, E any](s S, v E) S {
+	return append(s, v)
+}
+```
+ -- but push is literally just append with extra steps so I might aswell use append
+
 
 - schedule tasks to be done on a certain day or time
 -- attach a glyph to days on the calendar if there's a task scheduled that day

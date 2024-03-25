@@ -106,9 +106,9 @@ func fetchTasks () []Task {
 	dat, err := os.ReadFile(TODO_LIST)
 	initTasks := make([]Task, 0)
 	if err!=nil {
-		// TODO, check check if this can produce errors besdies file not found
+		// TODO, check check if this can produce errors besides file not found
 		// if it can than check for them and handle them.  file not found already
-		// solved 3 functions up with writeTasks
+		// solved with writeTask and by returning the empty []Task
 	} else {
 		for _,t:=range strings.Split(string(dat), "\n") {
 			if t != "" {
@@ -196,6 +196,21 @@ func initialModel() model {
 	}
 }
 
+type SyncMsg []Task
+
+func doSync() tea.Cmd {
+	return tea.Every(TODO_SYNC_FREQ, func(_ time.Time) tea.Msg {
+		return SyncMsg (fetchTasks())
+	})
+}
+
+func writeTasksCmd(tasks []Task) tea.Cmd {
+	return func () tea.Msg {
+		writeTasks(tasks)
+		return nil
+	}
+}
+
 type TickMsg time.Time
 
 func doTick() tea.Cmd {
@@ -208,6 +223,7 @@ func (m model) Init() tea.Cmd {
 	return tea.Sequence(
 		tea.EnterAltScreen,
 		tea.SetWindowTitle("chronogopher"),
+		doSync(),
 		doTick(),
 	)
 }
@@ -215,17 +231,19 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type){
 		// todo on every second
-		case TickMsg:
-			if !slices.Equal(m.todo.tasks, fetchTasks()){
-				m.todo.tasks = fetchTasks()
+		case SyncMsg:
+			if !slices.Equal(m.todo.tasks, msg){
+				m.todo.tasks = msg
 				for int(m.todo.sel) >= len(m.todo.tasks)-1{
 					m.todo.sel--
 				}
 			}
+			return m, doSync()
+		case TickMsg:
 			// before updating dt get previous date
 			py, pm, pd := m.dt.Date()
-			now := time.Now()
-			cy, cm, cd := now.Date()
+			now := time.Time(msg) // why do I need to cast TickMsg to time.Time but I
+			cy, cm, cd := now.Date() // don't have to cast SyncMsg to []Task
 			// check if the selDate is the same as the previous date
 			if py == m.selDate.year && pm == m.selDate.month && pd == m.selDate.day {
 				// selDate was equal to current day, so it should day in sync
@@ -354,17 +372,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								if nt != "" {
 									if len(m.todo.tasks) == 0 {
 										m.todo.tasks = [] Task {Task{task: nt}}
-										writeTasks(m.todo.tasks)
 									}else{
 										m.todo.tasks = slices.Insert (m.todo.tasks,
 											int(m.todo.sel)+1 ,
 											Task{task: nt})
-										writeTasks(m.todo.tasks)
 									}
 								}
 								// unfocus textinput
 								m.todoInput.Blur()
-								return m, nil
+								return m, writeTasksCmd(m.todo.tasks)
 							} else { // focus it
 								foc := m.todoInput.Focus()
 								return m, foc
@@ -385,9 +401,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 									rem:=slices.Delete(m.todo.tasks, selint, selint+1)
 									ins:=slices.Insert(rem, selint, Task{task: nt})
 									m.todo.tasks = ins
-									writeTasks(m.todo.tasks)
 								}
 								m.todoInput.Blur()
+								return m, writeTasksCmd(m.todo.tasks)
 							} else {
 								foc := m.todoInput.Focus()
 								if int(m.todo.sel) < len(m.todo.tasks) {
@@ -403,11 +419,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						case TD_DELETE:
 							selint := int(m.todo.sel)
 							m.todo.tasks = slices.Delete(m.todo.tasks, selint, selint+1)
-							writeTasks(m.todo.tasks)
 							if selint >= len(m.todo.tasks)-1 && selint >= 0 {
 								m.todo.sel--
 							}
-							return m, nil
+							return m, writeTasksCmd(m.todo.tasks)
 					}
 			}
 	}

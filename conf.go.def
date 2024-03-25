@@ -97,6 +97,8 @@ const(
 	TODO_SEL_PREF string = "⊢"
 	// placeholder text for the textinpu
 	TODO_PLACEHOLDER string = "      what to do...      "
+	// time.Duration for how often to sync the todolist
+	TODO_SYNC_FREQ time.Duration = time.Second
 )
 func todoStyle(m model) lipgloss.Style {
 	if m.sel == TodoSect {
